@@ -113,6 +113,11 @@ class IBSink : public cSimpleModule
                                      // flit of the first repFirstPackets was received
   cStdDev enoughToLastPktLatencyStat; // statistics about the time difference from enough pkts to last pkt
 
+  // packet inter-arrival times per sender
+  std::vector<cDoubleHistogram> interArrivalTimes;
+
+  std::vector<simtime_t> lastPacketTime;
+
  protected:
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);

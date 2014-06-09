@@ -28,6 +28,9 @@
 #include "ib_m.h"
 #include "sink.h"
 
+#include <cassert>
+#include <sstream>
+
 Define_Module( IBSink );
 
 void IBSink::initialize()
@@ -74,6 +77,11 @@ void IBSink::initialize()
   msgF2FLatency.setName("Msg-First2First-Network-Latency");
   enoughPktsLatency.setName("Enough-Pkts-Network-Latency");
   enoughToLastPktLatencyStat.setName("Last-to-Enough-Pkt-Arrival");
+
+  cDoubleHistogram histo;
+  histo.setRangeAutoUpper(0);
+  interArrivalTimes.push_back(histo);
+  lastPacketTime.push_back(SimTime());
 }
 
 // Init a new drain message and schedule it after delay
@@ -129,6 +137,20 @@ void IBSink::handleData(IBDataMsg *p_msg)
   if (p_msg->getFlitSn() == 0) {
     unsigned int srcLid = p_msg->getSrcLid();
     unsigned int srcPktSn = p_msg->getPacketSn();
+
+    for (unsigned int j = interArrivalTimes.size(); j <= srcLid; ++j) {
+      cDoubleHistogram *histo = interArrivalTimes[0].dup();
+      std::ostringstream oss;
+      oss << "Inter-Arrival-Times-" << j;
+      histo->setName(oss.str().c_str());
+      interArrivalTimes.push_back(*histo);
+      lastPacketTime.push_back(SimTime());
+    }
+    simtime_t &lpt = lastPacketTime[srcLid];
+    if (lpt != SimTime()) {
+      interArrivalTimes[srcLid].collect(simTime() - lpt);
+    }
+    lpt = simTime();
     if (lastPktSnPerSrc.find(srcLid) != lastPktSnPerSrc.end()) {
       unsigned int curSn = lastPktSnPerSrc[srcLid];
       if (srcPktSn == 1+curSn) {
@@ -334,6 +356,11 @@ void IBSink::finish()
   recordScalar("OO-IO-Packets-Ratio", 1.0*totOOPackets/totIOPackets);
   recordScalar("Num-SRCs", lastPktSnPerSrc.size());
   lastPktSnPerSrc.clear();
+
+  for (std::vector<cDoubleHistogram>::iterator iter = interArrivalTimes.begin() + 1;
+          iter != interArrivalTimes.end(); ++iter) {
+      iter->record();
+  }
 }
 
 IBSink::~IBSink() {
