@@ -38,6 +38,8 @@ simple IBApp
   // - shape
   volatile double msg2msgGap @unit(ns); // extra delay between messages
 
+  volatile double initialDelay @unit(ns); // extra delay before sending first message
+
   // - SQ
   volatile int msgSQ;
   @display("i=block/telnet");

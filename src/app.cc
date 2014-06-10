@@ -123,13 +123,14 @@ void IBApp::initialize(){
   seqIdxVec.setName("Dst-Sequence-Index");
 
   // if we are in param mode we may be getting a 0 as DST and thus keep quite
+  double delay_ns = par("initialDelay");
   if (msgDstMode == DST_PARAM) {
     int dstLid = par("dstLid");
     if (dstLid)
-      scheduleAt(simTime(), new cMessage);
+      scheduleAt(simTime() + 1e-9 * delay_ns, new cMessage);
   } else {
     // Emulate a "done"
-    scheduleAt(simTime(), new cMessage);
+    scheduleAt(simTime() + 1e-9 * delay_ns, new cMessage);
   }
 
 }
