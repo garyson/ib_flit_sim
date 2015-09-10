@@ -82,6 +82,18 @@ void IBSink::initialize()
   histo.setRangeAutoUpper(0);
   interArrivalTimes.push_back(histo);
   lastPacketTime.push_back(SimTime());
+
+  /* We need to only insert events into the "done" gate if it is ultimately
+   * connected to the Dimemas Controller (or something else that can accept
+   * the messages). We must use the getPathEndGate() method of cGate to follow
+   * the path all the way to the last point within the parent module (the HCA
+   * in this case), and then ask if that last gate is connected.  We then cache
+   * the answer since it won't change for the duration of the simulation. */
+  cGate *doneGate = gate("done");
+  assert(doneGate != nullptr);
+  cGate *endGate = doneGate->getPathEndGate();
+  assert(endGate != nullptr);
+  this->notifyOnDone = endGate->isConnected();
 }
 
 // Init a new drain message and schedule it after delay
@@ -120,7 +132,20 @@ void IBSink::consumeDataMsg(IBDataMsg *p_msg)
   p_sentMsg->setVL(vl);
   p_sentMsg->setWasLast(p_msg->getPacketLength() == p_msg->getFlitSn() + 1);
   send(p_sentMsg, "sent");
-  delete p_msg;
+
+  if (p_sentMsg->getWasLast() && this->notifyOnDone) {
+      /* Tell the controller that we sent this message so that he can inform
+       * Dimemas */
+      char nameBuf[128];
+      snprintf(nameBuf, 128, "%s-%u-%u", this->getFullName(),
+               p_msg->getSrcLid(), p_msg->getMsgIdx());
+      auto doneMsg = new DimDoneMsg(nameBuf, IB_DIM_DONE_MSG);
+      doneMsg->setComplete_time(simTime());
+      doneMsg->setSrcLid(p_msg->getSrcLid());
+      doneMsg->setMsgId(p_msg->getMsgIdx());
+      send(doneMsg, "done");
+      delete p_msg;
+  }
 }
 
 void IBSink::handleData(IBDataMsg *p_msg)

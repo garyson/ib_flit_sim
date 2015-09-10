@@ -1,0 +1,81 @@
+Small TO-DOs:
+
+ - Separate MPI ranks and LIDs.  Take the mappings in as a parameter and do
+   the conversion in the Controller.
+
+ - Make the overall message length and context string accessible to the sink
+   when it receives the last flit of the message, or have a way to map back
+   to the original controller message which has this information.
+
+ - Handle two messages completing at the same time step.  Right now, we will
+   return control to Dimemas on the first message, and Dimemas may then
+   advance the time, putting us behind.  This can mostly likely be done by
+   setting the priority of the stop messages to the lowest possible, and then
+   just self-sending the stop message with 0 delay after cancelling it.
+
+ - Don't deadlock if we get a message request when an App is idle.
+
+Large re-architecturing:
+
+The original App module is instantiated once per HCA and sends out
+messages based on a distribution.  However, this won't work for the
+Dimemas trace replay approach, using a single socket to communicate
+with Dimemas.
+
+The initial plas was to have a singleton App which connects to each
+HCA's generator and sink as follows:
+
+Current architecture:
+
+          +------------------------------------------------------+
+          |                                                      |
+          |    +------+                      +------+            |
+     +----+--->| ibuf |<-------------------->| sink |            |
+  +----+  |    +------+                      +------+            |
+  |wire|  |                                                      |
+  +----+  |    +------+       +-------+       +-----+    +-----+ |
+     ^----+----| obuf |<----->| vlarb |<----->| gen |<-->| app | |
+          |    +------+       +-------+       +-----+    +-----+ |
+          |                                                      |
+          +------------------------------------------------------+
+
+Attempt #1: Just replace App.
+
+          +-----------------------------------------------+
+          |                                               |
+          |    +------+                      +------+     |
+     +----+--->| ibuf |<-------------------->| sink |-----+-----v
+  +----+  |    +------+                      +------+     |  +-----+
+  |wire|  |                                               |  | app |<->DIMEMAS
+  +----+  |    +------+       +-------+       +-----+     |  +-----+
+     ^----+----| obuf |<----->| vlarb |<----->| gen |<----+-----^
+          |    +------+       +-------+       +-----+     |
+          |                                               |
+          +-----------------------------------------------+
+
+This was infeasible since the contract between the IB packet generator
+and the "app" is that the app can queue only a single message at a
+time.  Changing this would begin to become very invasive.
+
+Attempt #2: Introduce a global Controller.
+
+          +--------------------------------------------------+
+          |                                                  |
+          |    +------+                  +------+            |
+     +----+--->| ibuf |<---------------->| sink |------------+-----v
+  +----+  |    +------+                  +------+            | +----------+
+  |wire|  |                                                  | |controller|
+  +----+  |    +------+     +-------+    +-----+    +-----+  | +----------+
+     ^----+----| obuf |<--->| vlarb |<-->| gen |<-->| app |<-+-----+  ^
+          |    +------+     +-------+    +-----+    +-----+  |        |
+          |                                                  |        v
+          +--------------------------------------------------+    DIMEMAS
+
+We keep the App almost as-is.  This allows the probability
+distribution-based simulations to continue to work.  We then add a new
+singleton Controller object which communicates with Dimemas and, as
+needed, sends a message to the appropriate App telling it to enqueue
+a message.  When the last flit of the message reaches the Sink, the
+Sink sends a message directly to the Controller with a unique ID of the
+completed message, and the Controller looks it up and sends the
+SEND COMPLETED message to Dimemas.

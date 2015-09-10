@@ -34,6 +34,8 @@ enum IB_MSGS
   IB_APP_MSG      = 11;
   IB_PUSH_MSG     = 12;
   IB_TQ_LOAD_MSG  = 13;
+  IB_DIM_REQ_MSG  = 14;
+  IB_DIM_DONE_MSG = 15;
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -157,4 +159,23 @@ message IBAppMsg extends cMessage
   unsigned int pktIdx;   // the next pkt index within the message
   unsigned int flitIdx;  // the next flit index in the packet
   unsigned int VL;       // the out VL to be used
+}
+
+message DimReqMsg extends cMessage
+{
+  simtime_t inject_time;
+  unsigned int srcRank;
+  unsigned int srcLid;
+  unsigned int msgId;    // unique identifier for the message per-sender app
+  unsigned int dstRank;
+  unsigned int dstLid;
+  unsigned int lenBytes;
+  string contextString;
+}
+
+message DimDoneMsg extends cMessage
+{
+  simtime_t complete_time;
+  unsigned int srcLid;
+  unsigned int msgId;
 }

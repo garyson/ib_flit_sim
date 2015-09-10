@@ -34,6 +34,7 @@
 #include "app.h"
 #include "vlarb.h"
 #include <vec_file.h>
+#include <cmath>
 using namespace std;
 
 Define_Module(IBApp);
@@ -71,12 +72,14 @@ void IBApp::initialize(){
     msgDstMode = DST_SEQ_LOOP;
   } else if (!strcmp(dstModePar, "seq_rand")) {
     msgDstMode = DST_SEQ_RAND;
+  } else if (!strcmp(dstModePar, "queue")) {
+    msgDstMode = DST_QUEUE;
   } else {
     error("unknown dstMode: %s", dstModePar);
   }
 
   // destination related parameters
-  if (msgDstMode != DST_PARAM) {
+  if (msgDstMode != DST_PARAM && msgDstMode != DST_QUEUE) {
     const char *dstSeqVecFile = par("dstSeqVecFile");
     const int   dstSeqVecIdx  = par("dstSeqVecIdx");
     vecFiles   *vecMgr = vecFiles::get();
@@ -153,6 +156,7 @@ IBAppMsg *IBApp::getNewMsg()
   unsigned int msgLen_B;    // the length of a message in bytes
   unsigned int msgSQ;       // the SQ to be used
   unsigned int msgDstLid;   // destination lid
+  unsigned int ourMsgId;    // Dimemas message unique ID
 
   msgMtuLen_B = par("msgMtuLen");
   msgSQ = par("msgSQ");
@@ -176,6 +180,7 @@ IBAppMsg *IBApp::getNewMsg()
   switch (msgDstMode) {
   case DST_PARAM:
     msgDstLid = par("dstLid");
+    ourMsgId = this->msgIdx;
     break;
   case DST_SEQ_ONCE:
     msgDstLid = (*dstSeq)[dstSeqIdx++];
@@ -183,6 +188,7 @@ IBAppMsg *IBApp::getNewMsg()
             dstSeqDone = 1;
     }
        seqIdxVec.record(dstSeqIdx);
+       ourMsgId = this->msgIdx;
     break;
   case DST_SEQ_LOOP:
     msgDstLid = (*dstSeq)[dstSeqIdx++];
@@ -190,22 +196,37 @@ IBAppMsg *IBApp::getNewMsg()
             dstSeqIdx = 0;
     }
        seqIdxVec.record(dstSeqIdx);
+       ourMsgId = this->msgIdx;
     break;
   case DST_SEQ_RAND:
     dstSeqIdx = intuniform(0,dstSeq->size()-1);
     msgDstLid = (*dstSeq)[dstSeqIdx];
+    ourMsgId = this->msgIdx;
+    break;
+  case DST_QUEUE:
+    if (msgQueue.empty()) {
+      return nullptr;
+    } else {
+      auto in_msg = msgQueue.front();
+      msgQueue.pop();
+      msgDstLid = in_msg->getDstLid();
+      msgLen_B = in_msg->getLenBytes();
+      ourMsgId = in_msg->getMsgId();
+    }
     break;
   default:
     error("unsupported msgDstMode: %d", msgDstMode);
     break;
   }
 
+  msgLen_P = std::ceil(msgLen_B / (float)msgMtuLen_B);
+
   IBAppMsg *p_msg;
   char name[128];
-  sprintf(name, "app-%s-%u", getFullPath().c_str() ,msgIdx);
+  sprintf(name, "app-%s-%u", getFullPath().c_str(), ourMsgId);
   p_msg = new IBAppMsg(name, IB_APP_MSG);
   p_msg->setAppIdx( getIndex() );
-  p_msg->setMsgIdx(msgIdx);
+  p_msg->setMsgIdx(ourMsgId);
   p_msg->setDstLid(msgDstLid);
   p_msg->setSQ(msgSQ);
   p_msg->setLenBytes(msgLen_B);
@@ -216,18 +237,48 @@ IBAppMsg *IBApp::getNewMsg()
 }
 
 void IBApp::handleMessage(cMessage *p_msg){
-  delete p_msg;
+  auto gate = p_msg->getArrivalGateId();
+  if (p_msg->isSelfMessage() || gate == this->findGate("out$i")) {
+    if (!dstSeqDone) {
+      // generate a new messaeg and send after hiccup
+      IBAppMsg *p_new = getNewMsg();
 
-  if (!dstSeqDone) {
-    // generate a new messaeg and send after hiccup
-    IBAppMsg *p_new = getNewMsg();
+      if (!p_new) {
+          /* No messages to send -- we're done for now */
+          EV << "-I- " << getFullPath()
+             << "Ready to send but queue is empty\n";
+          idle = true;
+          return;
+      }
 
-    double delay_ns = par("msg2msgGap");
-    sendDelayed(p_new, delay_ns*1e-9, "out$o");
+      double delay_ns = par("msg2msgGap");
+      sendDelayed(p_new, delay_ns*1e-9, "out$o");
 
-    EV << "-I- " << getFullPath()
-       << " sending new app message " << p_new->getName()
-       << endl;
+      EV << "-I- " << getFullPath()
+         << " sending new app message " << p_new->getName()
+         << endl;
+      delete p_msg;
+    }
+  } else if (gate == this->findGate("in")) {
+    if (msgDstMode != DST_QUEUE) {
+        std::cerr << "Wrong mode to receive anything from in gate\n";
+        return;
+    }
+    if (p_msg->getKind() != IB_DIM_REQ_MSG) {
+        std::cerr << "Got wrong message \"" << p_msg->getName()
+                  << "\" (kind=" << p_msg->getKind() << ") on in gate\n";
+        return;
+    }
+    msgQueue.push(dynamic_cast<DimReqMsg *>(p_msg));
+    /* TODO: Figure out if we are allowed to send a message and do so if
+     * we can */
+    if (idle) {
+      EV << "-I- " << getFullPath()
+         << " We were idle; sending self-message to dequeue this at "
+         << simTime() << "\n";
+      idle = false;
+      scheduleAt(simTime(), new cMessage);
+    }
   }
 }
 

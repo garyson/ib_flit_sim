@@ -76,6 +76,8 @@ class IBSink : public cSimpleModule
   double startStatCol_sec; // time to start co
   unsigned int repFirstPackets; // if not zero declare a message as done after first repFirstPackets arrived
 
+  bool notifyOnDone; // send a message to the "done" gate when message done?
+
   // data structure
   int     duringHiccup;                  // set to 1 if during a hiccup
   cQueue  queue;

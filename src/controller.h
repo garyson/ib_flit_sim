@@ -101,63 +101,52 @@
 
 #include <omnetpp.h>
 
-#include <queue>
+#include <map>
+#include <memory>
+
+#include "socket.h"
+
+using DimMessageID = unsigned int;
+using MessageTable = std::map<DimMessageID, std::unique_ptr<DimReqMsg> >;
 
 //
 // Generates IB Application Messages
 //
-class IBApp : public cSimpleModule
+class Controller : public cSimpleModule
 {
  private:
-  // destination selection modes
-  enum dstSelModes {
-    DST_PARAM,     // invoke the dstLid param every message
-    DST_SEQ_ONCE,  // use the dstSeq vector of dstLids only once.
-    DST_SEQ_LOOP,  // continously loop through the dstSeq vector od dstLids.
-    DST_SEQ_RAND,  // Destination is randomly selected from the sequence
-    DST_QUEUE,     // Messages are placed in a queue by an external controller
-  };
+  // Identify each message in printable strings
+  unsigned int msgIdx;
 
-  // how message length is defined
-  enum msgLenModes {
-    MSG_LEN_PARAM, // invoke the msgLength param every message
-    MSG_LEN_SET    // select from the given set of lengths/probabilities
-  };
+  // Server socket used for communication with Dimemas
+  std::unique_ptr<Socket> sock;
 
-  // - destination
-  dstSelModes msgDstMode;    // mode for selecting destination
-  std::string dstSeqVecFile; // the vector file name that contain the sequences
-  unsigned int dstSeqVecIdx; // the index of the generator in the file
-  std::vector<int> *dstSeq; // a destination lid sequence
+  // Stop message used to return control to Dimemas
+  cMessage stopMessage;
 
-  // - length
-  msgLenModes msgLenMode;          // possible values: param|set
-  std::vector<int> msgLenSet; // a set of lengths
-  cLongHistogram msgLenProb;// probability for each index in msgLenSet
+  // Active message table; used to resolve completions
+  MessageTable active;
 
-  // - shape
-  double msg2msgGap_ns;   // extra delay from one msg end to the next start
-
-  // - SQ
-  std::queue<DimReqMsg *> msgQueue; // send queue for this application
-  bool idle;
-
-  // state
-  unsigned int dstSeqIdx; // Using a sequence of dLids the next index to use
-  int dstSeqDone;         // When using a sequence once 1 if entire seq was gen
-  unsigned int msgIdx;    // counter of generated messages
-
-  // statistics
-  cOutVector seqIdxVec;   // track the current sequence index
+  // Dimemas timescale
+  double timescale;
 
   // methods
  private:
 
+  void waitOnDimemas();
+
+  bool handleDimemasFinish(std::string args);
+  bool handleDimemasEnd(std::string args);
+  bool handleDimemasStop(std::string args);
+  bool handleDimemasSend(std::string args);
+
+  unsigned int rank2lid(unsigned int rank) { return rank + 1; }
+
   // Initialize a new set of parameters for a new message
-  void makeNewMsgParams();
-  void parseIntListParam(const char *parName, std::vector<int> &out);
-  IBAppMsg *getNewMsg();
-  unsigned int getMsgLenByDistribution();
+  DimReqMsg *getNewMsg(unsigned int msgSrcLid, unsigned int msgDstLid,
+                      unsigned int msgLen_B, std::string dimemasName);
+
+  std::unique_ptr<DimReqMsg> lookupMessage(unsigned int msgId);
 
  protected:
   virtual void initialize();

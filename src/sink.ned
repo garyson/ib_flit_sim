@@ -35,4 +35,5 @@ simple IBSink
  gates:
   input in;
   output sent;
+  output done;
 }

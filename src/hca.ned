@@ -29,6 +29,8 @@ module HCA
         @display("bgb=340,225;i=device/server2");
     gates:
         inout port;
+        input msgIn @loose;
+        output msgDone @loose;
 
     submodules:
         app: IBApp {
@@ -84,4 +86,7 @@ module HCA
 
         port$i --> ibuf.in;
         obuf.out --> port$o;
+
+        msgIn --> app.in;
+        msgDone <-- sink.done;
 }
