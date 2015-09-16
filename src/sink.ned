@@ -25,7 +25,7 @@ package ib_model;
 simple IBSink
 {
  parameters:
-  double flitSize @unit(B);       // flit size in bytes
+  int flitSize @unit(B);       // flit size in bytes
   double popDlyPerByte @unit(ns);   // the PCI Exp drain rate
   int maxVL;                      // Maximum VL we send on
   volatile double hiccupDuration @unit(us); // the time a hiccup may take
