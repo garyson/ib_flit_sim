@@ -51,6 +51,7 @@ void IBApp::parseIntListParam(const char *parName, std::vector<int> &out)
     out.push_back(atoi(entStr));
     entStr = strtok(NULL, " ,");
   }
+  delete[] tmpBuf;
 }
 
 // main init of the module
