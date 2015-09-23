@@ -50,6 +50,7 @@ void IBInBuf::parseIntListParam(char *parName, int numEntries,
   }
   for (; cnt < numEntries; cnt++)
     out.push_back(0);
+  delete[] tmpBuf;
 }
 
 void IBInBuf::initialize()

@@ -54,6 +54,7 @@ vecFile::parse(string fileName, int isInt) {
            << " line:" << lineNum << " length:" << strlen(buf)
            << " is too long (>1024). Please split into multiple lines."
            << endl;
+      fclose(f);
       return 1;
     }
 
@@ -64,6 +65,7 @@ vecFile::parse(string fileName, int isInt) {
       cout << "-E- vector file:" << fileName
            << " line:" << lineNum << " bad format: should start with '<idx>:'"
            << endl;
+      fclose(f);
       return 1;
     }
     // c must be a ':'
@@ -71,6 +73,7 @@ vecFile::parse(string fileName, int isInt) {
       cout << "-E- vector file:" << fileName
            << " line:" << lineNum << " bad format: did not find ':'"
            << endl;
+      fclose(f);
       return 1;
     }
 
@@ -99,6 +102,7 @@ vecFile::parse(string fileName, int isInt) {
           cout << "-E- vector file:" << fileName
                << " line:" << lineNum
                << " bad format: expected an INT" << endl;
+          fclose(f);
           return 1;
         }
         if (res >0) {
@@ -110,6 +114,7 @@ vecFile::parse(string fileName, int isInt) {
           cout << "-E- vector file:" << fileName
                << " line:" << lineNum
                << " bad format: expected a FLOAT" << endl;
+          fclose(f);
           return 1;
         }
         if (res > 0) {
