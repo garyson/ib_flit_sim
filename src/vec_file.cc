@@ -60,7 +60,7 @@ vecFile::parse(string fileName, int isInt) {
     // parse the line using sscanf
     tok = strtok_r(buf, " ,", &lasts);
     // get the index
-    if ((res = sscanf(tok, "%d%c", &idx, &c)) != 2) {
+    if ((res = sscanf(tok, "%u%c", &idx, &c)) != 2) {
       cout << "-E- vector file:" << fileName
            << " line:" << lineNum << " bad format: should start with '<idx>:'"
            << endl;

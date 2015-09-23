@@ -202,7 +202,7 @@ IBAppMsg *IBApp::getNewMsg()
 
   IBAppMsg *p_msg;
   char name[128];
-  sprintf(name, "app-%s-%d", getFullPath().c_str() ,msgIdx);
+  sprintf(name, "app-%s-%u", getFullPath().c_str() ,msgIdx);
   p_msg = new IBAppMsg(name, IB_APP_MSG);
   p_msg->setAppIdx( getIndex() );
   p_msg->setMsgIdx(msgIdx);

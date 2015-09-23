@@ -36,7 +36,7 @@ public:
 	};
 	std::string dump() const {
 		char buff[128];
-		sprintf(buff, " src: %d app: %d msg: %d", srcId, appIdx, msgIdx);
+		sprintf(buff, " src: %u app: %u msg: %u", srcId, appIdx, msgIdx);
 		return(std::string(buff));
 	};
 };

@@ -96,7 +96,7 @@ void IBInBuf::initialize()
   int val;
   for (unsigned int vl = 0; vl < maxVL+1; vl++ ) {
     char parName[12];
-    sprintf(parName,"maxStatic%d", vl);
+    sprintf(parName,"maxStatic%u", vl);
     val = par(parName);
     val = val*width/4;
     maxStatic.push_back(val);
@@ -111,7 +111,7 @@ void IBInBuf::initialize()
   // Initiazlize the statistical collection elements
   for (unsigned int vl = 0; vl < maxVL+1; vl++ ) {
     char histName[40];
-    sprintf(histName,"Used Static Credits for VL:%d", vl);
+    sprintf(histName,"Used Static Credits for VL:%u", vl);
     staticUsageHist[vl].setName(histName);
     staticUsageHist[vl].setRangeAutoUpper(0, 10, 1);
   }
