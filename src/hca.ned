@@ -25,15 +25,18 @@ package ib_model;
 module HCA
 {
     parameters:
+        // for Dimemas integration
+        int appCount;
+
         int srcLid;
         @display("bgb=340,225;i=device/server2");
     gates:
         inout port;
-        input msgIn @loose;
+        input msgIn[appCount] @loose;
         output msgDone @loose;
 
     submodules:
-        app: IBApp {
+        app[appCount]: IBApp {
             parameters:
                 @display("p=313,170");
         }
@@ -42,7 +45,7 @@ module HCA
                 srcLid = srcLid;
                 @display("i=block/source;p=246,170");
             gates:
-                in[1];
+                in[appCount];
         }
         sink: IBSink {
             parameters:
@@ -72,7 +75,10 @@ module HCA
 
         }
     connections:
-        app.out <--> gen.in[0];
+        for i = 0..appCount-1 {
+            app[i].out <--> gen.in[i];
+            msgIn[i] --> app[i].in;
+        }
         gen.out --> vlarb.in[0];
         vlarb.sent[0] --> { @display("m=m,68,20,68,20"); } --> gen.sent;
         vlarb.out --> { @display("m=m,16,56,24,60"); } --> obuf.in;
@@ -87,6 +93,5 @@ module HCA
         port$i --> ibuf.in;
         obuf.out --> port$o;
 
-        msgIn --> app.in;
         msgDone <-- sink.done;
 }

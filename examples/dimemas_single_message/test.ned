@@ -34,8 +34,8 @@ network test
         H_1.port <--> IB4XQDRWire <--> SW_1.port[0];
         H_2.port <--> IB4XQDRWire <--> SW_1.port[1];
 
-        controller.out[0] --> H_1.msgIn;
+        controller.out[0] --> H_1.msgIn[0];
         H_1.msgDone --> controller.done[0];
-        controller.out[1] --> H_2.msgIn;
+        controller.out[1] --> H_2.msgIn[0];
         H_2.msgDone --> controller.done[1];
 }

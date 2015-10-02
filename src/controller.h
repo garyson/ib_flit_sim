@@ -109,6 +109,15 @@
 using DimMessageID = unsigned int;
 using MessageTable = std::map<DimMessageID, std::unique_ptr<DimReqMsg> >;
 
+/* A simple structure to uniquely identify a queue pair used by an instance of
+ * the simulated application. */
+struct QPIdentifier {
+    int lid;
+    int qpn;
+
+    QPIdentifier(int l, int q) : lid(l), qpn(q) {}
+};
+
 //
 // Generates IB Application Messages
 //
@@ -120,6 +129,8 @@ class Controller : public cSimpleModule
 
   // Server socket used for communication with Dimemas
   std::unique_ptr<Socket> sock;
+
+  std::vector<QPIdentifier> rankMapping;
 
   // Stop message used to return control to Dimemas
   cMessage stopMessage;
@@ -140,10 +151,12 @@ class Controller : public cSimpleModule
   bool handleDimemasStop(std::string args);
   bool handleDimemasSend(std::string args);
 
-  unsigned int rank2lid(unsigned int rank) { return rank + 1; }
+  unsigned int rank2lid(unsigned int rank) { return rankMapping[rank].lid; }
+  unsigned int rank2qpn(unsigned int rank) { return rankMapping[rank].qpn; }
 
   // Initialize a new set of parameters for a new message
-  DimReqMsg *getNewMsg(unsigned int msgSrcLid, unsigned int msgDstLid,
+  void startSendRecv(double timestamp,
+                      unsigned int msgSrcLid, unsigned int msgDstLid,
                       unsigned int msgLen_B, std::string dimemasName);
 
   std::unique_ptr<DimReqMsg> lookupMessage(unsigned int msgId);

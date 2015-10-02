@@ -36,7 +36,7 @@
 #include <cctype>
 #include <climits>
 #include <cmath>
-#include <vec_file.h>
+#include <fstream>
 using namespace std;
 
 #if defined(__GNUC__)
@@ -71,6 +71,24 @@ void Controller::initialize(){
 
   const char *socketListenHost = par("socketListenHost");
   const char *socketListenPort = par("socketListenPort");
+
+  try {
+      ifstream f{"ranks.txt"};
+      std::string line;
+      while (getline(f, line)) {
+          std::istringstream ss(line);
+          int lid;
+          int qpnum;
+          ss >> lid >> qpnum;
+          if (!ss) {
+              throw std::runtime_error("invalid rank identifier");
+          }
+          this->rankMapping.emplace_back(lid, qpnum);
+      }
+  } catch (std::exception &ex) {
+      std::cerr << ex.what() << '\n';
+      throw;
+  }
 
   try {
   // start listening socket
@@ -177,28 +195,17 @@ bool Controller::handleDimemasSend(std::string args)
     args = trim_string(args.substr(index));
 
     // generate a new message
-    DimReqMsg *p_new = getNewMsg(srcRank, dstRank, msgSize, args);
+    startSendRecv(timestamp, srcRank, dstRank, msgSize, args);
 
-    simtime_t delay{timestamp * timescale};
-    simtime_t cur = simTime();
-    if (delay >= cur) {
-        sendDelayed(p_new, delay - cur, "out", srcRank);
-    } else {
-        /* Due to rounding error, the delay for this message would be negative.
-         *   Send immediately to avoid OMNet++ errors. */
-        send(p_new, "out", srcRank);
-    }
 
-    EV << "-I- " << getFullPath()
-       << " sending new controller message " << p_new->getName()
-       << endl;
 
     return true;
 }
 
 // Initialize the parameters for a new message by sampling the
 // relevant parameters and  allocate and init a new message
-DimReqMsg *Controller::getNewMsg(unsigned int msgSrcRank, unsigned int msgDstRank,
+void Controller::startSendRecv(double timestamp,
+                           unsigned int msgSrcRank, unsigned int msgDstRank,
                            unsigned int msgLen_B, std::string dimemasName)
 {
   DimReqMsg *p_msg;
@@ -217,7 +224,20 @@ DimReqMsg *Controller::getNewMsg(unsigned int msgSrcRank, unsigned int msgDstRan
                                      std::unique_ptr<DimReqMsg>(p_msg)));
 
   this->msgIdx++;
-  return p_msg;
+
+  simtime_t delay{timestamp * timescale};
+  simtime_t cur = simTime();
+  if (delay >= cur) {
+      sendDelayed(p_msg, delay - cur, "out", msgSrcRank);
+  } else {
+      /* Due to rounding error, the delay for this message would be negative.
+       *   Send immediately to avoid OMNet++ errors. */
+      send(p_msg, "out", msgSrcRank);
+  }
+
+  EV << "-I- " << getFullPath()
+     << " sending new controller message " << p_msg->getName()
+     << endl;
 }
 
 std::unique_ptr<DimReqMsg>

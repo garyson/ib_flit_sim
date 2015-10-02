@@ -18,6 +18,9 @@ Files in this directory:
    above files and provides some additional configuration.  This
    references some other INI files in the source distribution.
 
+ - ranks.txt: A mapping of MPI ranks to LID/QPN.  Each line specifies the
+   LID followed by the QPN for that MPI rank in sequence.
+
  - example-mpi-program.c: The MPI program that generated the trace, for
    reference purposes.
 
