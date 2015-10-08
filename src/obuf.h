@@ -56,6 +56,12 @@
 #include <omnetpp.h>
 #include <vector>
 #include "ib_m.h"
+
+enum class IBOutBufState {
+    IDLE,
+    INSIDE_PACKET,
+};
+
 //
 // Output Buffer for sending IB FLITs and VL credit updates
 //
@@ -78,7 +84,7 @@ class IBOutBuf : public cSimpleModule
   cQueue mgtQ;              // holds outstanding management packets
   int numDataCreditsQueued; // needed to make sure we do not overflow the qSize
   int prevPopWasDataCredit; // last pop was data credit (know when "free" msg)
-  int insidePacket;         // track the fact we are in the middle of a packet
+  IBOutBufState state;
   simtime_t prevFCTime;     // track the last time the VL0 flow control sent
   std::vector<long> prevSentFCCL;  // Sent FCCL per VL
   std::vector<long> prevSentFCTBS; // Sent FCTBS per VL

@@ -56,7 +56,7 @@ void IBOutBuf::initialize()
 
   // queue is empty
   prevPopWasDataCredit = 0;
-  insidePacket = 0;
+  state = IBOutBufState::IDLE;
   prevFCTime = 0;
   isMinTimeUpdate = 0;
 
@@ -121,9 +121,9 @@ void IBOutBuf::sendOutMessage(IBWireMsg *p_msg) {
 
     // track if we are in the middle of packet
     if (!p_dataMsg->getFlitSn() && (p_dataMsg->getPacketLength() > 1))
-      insidePacket = 1;
+      state = IBOutBufState::INSIDE_PACKET;
     else if (p_dataMsg->getFlitSn() + 1 == p_dataMsg->getPacketLength())
-      insidePacket = 0;
+      state = IBOutBufState::IDLE;
 
     FCTBS[p_msg->getVL()]++;
 
@@ -272,7 +272,7 @@ void IBOutBuf::handlePop()
     return;
   }
 
-  if (!insidePacket) {
+  if (state == IBOutBufState::IDLE) {
     if (sendFlowControl()) {
       prevPopWasDataCredit = 0;
       return;
