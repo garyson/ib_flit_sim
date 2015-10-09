@@ -88,17 +88,6 @@
 #include <map>
 #include <vector>
 #include <pktfwd.h>
-#define MAX_LIDS 10
-
-// Store packet specific information to store the packet state
-class PacketState {
-  int outPort; // the out port
-
- public:
-  PacketState(int pn) {
-    outPort = pn;
-  };
-};
 
 //
 // Input Buffer for Receiving IB FLITs and VL credit updates
@@ -138,10 +127,6 @@ class IBInBuf : public cSimpleModule
   int curPacketVL;
   int curPacketOutPort;
   simtime_t lastSendTime;
-
-  // as we might have multiple sends we need to track the "active sends"
-  // given the packet ID we track various state variables.
-  std::map<int, PacketState, std::less<int> > activeSendPackets;
 
   // pointer the container switch
   cModule* Switch;
