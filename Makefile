@@ -8,7 +8,15 @@ cleanall: checkmakefiles
 	cd src && $(MAKE) MODE=release clean
 	cd src && $(MAKE) MODE=debug clean
 
-makefiles:
+makefiles: makefiles-so
+
+makefiles-so:
+	cd src && opp_makemake --make-so -f --deep -o ib_flit_sim
+
+makefiles-lib:
+	cd src && opp_makemake --make-lib -f --deep -o ib_flit_sim
+
+makefiles-exe:
 	cd src && opp_makemake -f --deep -o ib_flit_sim
 
 checkmakefiles:
