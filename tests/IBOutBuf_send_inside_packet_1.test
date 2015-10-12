@@ -1,0 +1,137 @@
+%description:
+Verifies that the output buffer does not send a packet while in the
+INSIDE_PACKET state.
+
+%inifile: omnetpp.ini
+
+Test.obuf.credMinTime = 0.256us
+Test.obuf.size = 36
+Test.obuf.width = 4
+Test.obuf.maxVL = 0
+
+%file: test.ned
+
+import ib_model.IBOutBuf;
+import ib_model.IB4XQDRWire;
+
+network Test
+{
+    submodules:
+        mock: Mock;
+        obuf: IBOutBuf;
+
+    connections:
+        mock.out --> obuf.in;
+        mock.txCred --> obuf.rxCred;
+        mock.in <-- IB4XQDRWire <-- obuf.out;
+        mock.free <-- obuf.free;
+};
+
+%file: mock.ned
+
+simple Mock
+{
+    gates:
+        output out;
+        output txCred;
+        input in;
+        input free;
+};
+
+%file: mock.cc
+
+#include <omnetpp.h>
+#include "ib_m.h"
+
+namespace @TESTNAME@ {
+
+class Mock : public cSimpleModule {
+public:
+    virtual void initialize() override;
+    virtual void handleMessage(cMessage *msg) override;
+
+private:
+    simtime_t initTime;
+    unsigned int flowControlCount = 0;
+    unsigned int dataCount = 0;
+    unsigned int latestFCTBS;
+    unsigned int latestFCCL;
+};
+
+Define_Module(Mock);
+
+void Mock::initialize()
+{
+    flowControlCount = 0;
+    dataCount = 0;
+    initTime = SimTime::parse("1us");
+
+    IBDataMsg *outMsg = new IBDataMsg("TEST", IB_DATA_MSG);
+    outMsg->setName("TEST");
+    outMsg->setVL(0);
+    outMsg->setAppIdx(0);
+    outMsg->setMsgIdx(0);
+    outMsg->setMsgLen(1);
+    outMsg->setPktIdx(0);
+    outMsg->setPacketId(0);
+    outMsg->setPacketSn(0);
+    outMsg->setFlitSn(0);
+    outMsg->setPacketLength(10);
+    outMsg->setPacketLengthBytes(640);
+    outMsg->setDstLid(2);
+    outMsg->setSrcLid(1);
+    outMsg->setSL(0);
+    outMsg->setUseStatic(1);
+    outMsg->setBeforeAnySwitch(true);
+    /* cPacket field required for valid transmission delay */
+    outMsg->setByteLength(640);
+
+    sendDelayed(outMsg, initTime, "out");
+
+    outMsg = outMsg->dup();
+    outMsg->setFlitSn(1);
+
+    sendDelayed(outMsg, initTime, "out");
+}
+
+void Mock::handleMessage(cMessage *msg)
+{
+    std::cout << "Got message at time " << simTime() << "\n";
+    if (msg->getKind() == IB_FLOWCTRL_MSG) {
+        IBFlowControl *fcmsg = (IBFlowControl *)msg;
+        flowControlCount++;
+	std::cout << "Was flow control message #" << flowControlCount << '\n';
+	latestFCTBS = fcmsg->getFCTBS();
+	latestFCCL = fcmsg->getFCCL();
+	delete msg;
+	return;
+    }
+    if (msg->getArrivalGateId() != gate("in")->getId()) {
+        std::cout << "ERROR: Wrong gate\n";
+    }
+    if (msg->getKind() != IB_DATA_MSG) {
+        std::cout << "ERROR: Wrong message kind; expected IB_DATA_MSG got "
+		  << cEnum::get("IB_MSGS")->getStringFor(msg->getKind())
+	          << "\n";
+    }
+
+    ++dataCount;
+
+    cChannel *chan = msg->getArrivalGate()->getIncomingTransmissionChannel();
+    simtime_t delay = dataCount * chan->calculateDuration(msg);
+    std::cout << "Expected message delay " << delay << "\n";
+    if (simTime() < (initTime + delay)) {
+        std::cout << "ERROR: Message arrived too early at time " << simTime()
+	          << " (sent too soon by obuf?)\n";
+    }
+    delete msg;
+    if (dataCount >= 2) {
+        this->endSimulation();
+    }
+}
+
+}
+
+
+%not-contains: stdout
+ERROR

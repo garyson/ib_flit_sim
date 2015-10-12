@@ -1,0 +1,19 @@
+This directory contains tests for the IB flit-level simulation.  It is
+intended to aid refactoring/rework of the model, so that we can have
+confidence that making changes to the model will not break fundamental
+assumptions/invariants of our model.  These tests use the opp_test
+framework described in Chapter 15 of the OMNet++ User Manual [1].
+
+Each test file starts with a %description block containing a brief
+description of what the test does.
+
+Each test file contains a NED file which contains a "network" type,
+which is automatically loaded by the test framework.  In most cases, this
+contains as a submodule a simple module with a corresponding .cc file
+that implements the behavior of the test.
+
+The lib/ directory contains some shared OMNet++ modules and other
+classes which are used to implement some useful behavior that may be
+shared among tests.
+
+[1] https://omnetpp.org/doc/omnetpp/manual/usman.html
