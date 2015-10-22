@@ -55,7 +55,7 @@ void IBOutBuf::initialize()
   p_popMsg = new cMessage("pop", IB_POP_MSG);;
 
   // queue is empty
-  prevPopWasDataCredit = 0;
+  prevPop = IBPopType::NONE;
   state = IBOutBufState::IDLE;
   prevFCTime = 0;
   isMinTimeUpdate = 0;
@@ -226,7 +226,8 @@ void IBOutBuf::handlePop()
   // if we got a pop - it means the previous message just left the
   // OBUF. In that case if it was a data credit packet we have now a
   // new space for it. tell the VLA.
-  if (prevPopWasDataCredit) {
+  if (prevPop == IBPopType::DATA_FLIT
+                              || prevPop == IBPopType::DATA_LAST_FLIT) {
     cMessage *p_msg = new cMessage("free", IB_FREE_MSG);
     EV << "-I- " << getFullPath() << " sending 'free' to VLA as last "
        << " packet just completed." << endl;
@@ -235,7 +236,7 @@ void IBOutBuf::handlePop()
 
   if (state == IBOutBufState::IDLE) {
     if (sendFlowControl()) {
-      prevPopWasDataCredit = 0;
+      prevPop = IBPopType::FC_PACKET;
       return;
     }
   }
@@ -249,16 +250,18 @@ void IBOutBuf::handlePop()
          << p_cred->getName() << endl;
       sendOutMessage(p_msg);
 
+      // we just popped a real credit
       // track the time this PACKET (all credits) spent in the Q
       // the last credit of a packet always
       if ( p_cred->getFlitSn() + 1 == p_cred->getPacketLength() ) {
         packetStoreHist.collect( simTime() - packetHeadTimeStamp );
-      } else if ( p_cred->getFlitSn() == 0 ) {
-        packetHeadTimeStamp = p_msg->getTimestamp();
+        prevPop = IBPopType::DATA_LAST_FLIT;
+      } else {
+        if ( p_cred->getFlitSn() == 0 ) {
+          packetHeadTimeStamp = p_msg->getTimestamp();
+        }
+        prevPop = IBPopType::DATA_FLIT;
       }
-
-      // we just popped a real credit
-      prevPopWasDataCredit = 1;
     } else {
       EV << "-E- " << getFullPath() << " unknown message type to pop:"
          << p_msg->getKind() << endl;
@@ -267,7 +270,7 @@ void IBOutBuf::handlePop()
     // The queue is empty. Next message needs to immediately pop
     // so we clean this event
     EV << "-I- " << getFullPath() << " nothing to POP" << endl;
-    prevPopWasDataCredit = 0;
+    prevPop = IBPopType::NONE;
   }
 
   qDepth.record(queue.length());

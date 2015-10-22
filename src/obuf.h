@@ -62,6 +62,15 @@ enum class IBOutBufState {
     INSIDE_PACKET,
 };
 
+/** The previous packet/flit that was popped from the queue and
+ * sent. */
+enum class IBPopType {
+    NONE,
+    DATA_FLIT,
+    DATA_LAST_FLIT,
+    FC_PACKET,
+};
+
 //
 // Output Buffer for sending IB FLITs and VL credit updates
 //
@@ -82,7 +91,7 @@ class IBOutBuf : public cSimpleModule
   bool Enabled;        // Is this port enabled or is it part of a 8x/12x
   cQueue queue;             // holds the outstanding data
   int numDataCreditsQueued; // needed to make sure we do not overflow the qSize
-  int prevPopWasDataCredit; // last pop was data credit (know when "free" msg)
+  IBPopType prevPop;        // last pop type (know when "free" msg)
   IBOutBufState state;
   simtime_t prevFCTime;     // track the last time the VL0 flow control sent
   std::vector<long> prevSentFCCL;  // Sent FCCL per VL
