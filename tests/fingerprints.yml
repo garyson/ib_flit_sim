@@ -1,0 +1,12 @@
+---
+- workdir: examples/is1_3h_2s
+  inifile: is1_3h_2s.ini
+  fingerprint: 9567-55bd
+- workdir: examples/is1_3l_32n
+  inifile: is1_3l_32n.ini
+  fingerprint: 8cff-bb3e
+  config: 'OneHot'
+- workdir: examples/is1_3l_32n
+  inifile: is1_3l_32n.ini
+  fingerprint: f53e-8104
+  config: 'TwoHot'
