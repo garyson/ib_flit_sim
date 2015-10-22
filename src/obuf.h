@@ -81,7 +81,6 @@ class IBOutBuf : public cSimpleModule
   int isMinTimeUpdate; // set by minTime event. flag updates caused by minTime
   bool Enabled;        // Is this port enabled or is it part of a 8x/12x
   cQueue queue;             // holds the outstanding data
-  cQueue mgtQ;              // holds outstanding management packets
   int numDataCreditsQueued; // needed to make sure we do not overflow the qSize
   int prevPopWasDataCredit; // last pop was data credit (know when "free" msg)
   IBOutBufState state;
@@ -125,9 +124,6 @@ public:
    int getFCTBS(int vl) {
       return(FCTBS[vl]);
    };
-
-   // send or queue a message about port utilization into the obuf
-   void sendOrQueuePortLoadUpdateMsg(unsigned int rank, unsigned int firstLid, unsigned int lastLid, int load);
 
 };
 

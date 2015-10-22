@@ -84,28 +84,6 @@ void IBOutBuf::initialize()
   }
 } // initialize
 
-// places a new allocated IBTQLoadUpdateMsg on the buffer
-void IBOutBuf::sendOrQueuePortLoadUpdateMsg(unsigned int rank, unsigned int firstLid, unsigned int lastLid, int load) {
-    Enter_Method("sendOrQueuePortLoadUpdateMsg lid-range:[%d,%d] load:%d",
-            firstLid, lastLid, load);
-
-    IBTQLoadUpdateMsg *p_msg = new IBTQLoadUpdateMsg("load-update", IB_TQ_LOAD_MSG);
-    p_msg->setSrcRank(rank);
-    p_msg->setLoad(load);
-    p_msg->setFirstLid(firstLid);
-    p_msg->setLastLid(lastLid);
-    p_msg->setVL(0);
-    p_msg->setByteLength(8);
-
-    // if there is no other message on the wire sneak out
-    if ( ! p_popMsg->isScheduled() ) {
-        sendOutMessage(p_msg);
-    } else {
-        EV << "-I- " << getFullPath() << " queued port-load msg. mgtQ depth " << mgtQ.length() << endl;
-        mgtQ.insert(p_msg);
-    }
-}
-
 // send the message out
 // Init a new pop message and schedule it after delay
 // Note that at this stage the Q might be empty but a
@@ -229,16 +207,8 @@ int IBOutBuf::sendFlowControl()
       sentUpdate = 1;
     }
 
-    // send management message if no FC sent
-    if (!sentUpdate && !mgtQ.empty()) {
-        IBWireMsg *p_msg = (IBWireMsg*)mgtQ.pop();
-        EV << "-I- " << getFullPath() << " popped mgt message:"  << p_msg->getName() << endl;
-        sendOutMessage(p_msg);
-        sentUpdate = 1;
-    }
-
     // last VL zeros the min time update flag only if there are no mgt messages
-    if ( (curFlowCtrVL == maxVL+1) && mgtQ.empty())
+    if ( (curFlowCtrVL == maxVL+1) )
       isMinTimeUpdate = 0;
   }
 
@@ -261,15 +231,6 @@ void IBOutBuf::handlePop()
     EV << "-I- " << getFullPath() << " sending 'free' to VLA as last "
        << " packet just completed." << endl;
     send(p_msg, "free");
-  }
-
-  // first send mgt msg then try sending a flow control if required:
-  if (!mgtQ.empty()) {
-    IBWireMsg *p_msg = (IBWireMsg*)mgtQ.pop();
-    EV << "-I- " << getFullPath() << " first pop mgt message:"  << p_msg->getName() << endl;
-    sendOutMessage(p_msg);
-    prevPopWasDataCredit = 0;
-    return;
   }
 
   if (state == IBOutBufState::IDLE) {
