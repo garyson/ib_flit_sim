@@ -82,14 +82,6 @@ message IBFlowControl extends IBWireMsg
   long FCCL;
 }
 
-// this message used to signal a down port for upper level switch is loaded/unloaded
-message IBTQLoadUpdateMsg extends IBWireMsg
-{
-  int load; // 0 - unloaded, 1 - loaded, 2 - overload
-  int srcRank;
-  int firstLid; // the LID range
-  int lastLid;
-}
 
 ///////////////////////////////////////////////////////////////////////////
 //

@@ -443,20 +443,6 @@ void IBInBuf::handleSent(IBSentMsg *p_msg)
   cancelAndDelete(p_msg);
 }
 
-void IBInBuf::handleTQLoadMsg(IBTQLoadUpdateMsg *p_msg)
-{
-   if (!hcaIBuf) {
-      unsigned int firstLid = p_msg->getFirstLid();
-      unsigned int lastLid = p_msg->getLastLid();
-      unsigned int srcRank = p_msg->getSrcRank();
-      int load= p_msg->getLoad();
-      delete p_msg;
-      pktfwd->handleTQLoadMsg(getParentModule()->getIndex(), srcRank, firstLid, lastLid, load);
-   } else {
-      delete p_msg;
-   }
-}
-
 void IBInBuf::handleMessage(cMessage *p_msg)
 {
     int msgType = p_msg->getKind();
@@ -464,8 +450,6 @@ void IBInBuf::handleMessage(cMessage *p_msg)
         handleSent((IBSentMsg *)p_msg);
     } else if ( (msgType == IB_DATA_MSG) || (msgType == IB_FLOWCTRL_MSG) ) {
         handlePush((IBWireMsg*)p_msg);
-    } else if (msgType == IB_TQ_LOAD_MSG) {
-        handleTQLoadMsg((IBTQLoadUpdateMsg*)p_msg);
     } else {
         ev << "-E- " << getFullPath() << " does not know how to handle message:" << msgType << endl;
         if (p_msg->isSelfMessage())

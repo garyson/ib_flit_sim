@@ -44,9 +44,6 @@ public:
   // report queuing of flits on TQ for DLID (can be negative for arb)
   virtual int repQueuedFlits(unsigned int rq, unsigned int tq, unsigned int dlid, int numFlits);
 
-  // handle a report about port loading and unloading
-  virtual void handleTQLoadMsg(unsigned int tq, unsigned int srcRank, unsigned int fitstLid, unsigned int lastLid, int load);
-
 protected:
     virtual void initialize();
     virtual void finish();

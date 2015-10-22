@@ -63,15 +63,6 @@ int Pktfwd::repQueuedFlits(unsigned int rq, unsigned int tq, unsigned int dlid, 
 	return(0);
 }
 
-// IBuf received a TQLoadUpdate - Handle Received Port Usage Notification
-void Pktfwd::handleTQLoadMsg(unsigned int tq, unsigned int srcRank, unsigned int firstLid, unsigned int lastLid, int load) {
-	Enter_Method("handleTQLoadMsg tq:%d srcRank:%d lid-range: [%d,%d] load:%d", tq, srcRank, firstLid,
-			lastLid, load);
-	EV << "-I- " << getFullPath() << " handleTQLoadMsg tq: " << tq << " srcRank: " << srcRank << " lids: "
-			<< firstLid << "," << lastLid << " load: " << load << endl;
-
-}
-
 void Pktfwd::finish()
 {
 }

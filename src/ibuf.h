@@ -155,7 +155,6 @@ class IBInBuf : public cSimpleModule
   // return 1 if the HoQ at the given port and VL is free
   int isHoqFree(int portNum, int vl);
   void handlePush(IBWireMsg *p_msg);
-  void handleTQLoadMsg(IBTQLoadUpdateMsg *p_msg);
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
   virtual void finish();
