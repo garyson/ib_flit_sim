@@ -57,11 +57,6 @@
 #include <vector>
 #include "ib_m.h"
 
-enum class IBOutBufState {
-    IDLE,
-    INSIDE_PACKET,
-};
-
 /** The previous packet/flit that was popped from the queue and
  * sent. */
 enum class IBPopType {
@@ -92,7 +87,6 @@ class IBOutBuf : public cSimpleModule
   cQueue queue;             // holds the outstanding data
   int numDataCreditsQueued; // needed to make sure we do not overflow the qSize
   IBPopType prevPop;        // last pop type (know when "free" msg)
-  IBOutBufState state;
   simtime_t prevFCTime;     // track the last time the VL0 flow control sent
   std::vector<long> prevSentFCCL;  // Sent FCCL per VL
   std::vector<long> prevSentFCTBS; // Sent FCTBS per VL

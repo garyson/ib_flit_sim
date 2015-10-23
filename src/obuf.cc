@@ -56,7 +56,6 @@ void IBOutBuf::initialize()
 
   // queue is empty
   prevPop = IBPopType::NONE;
-  state = IBOutBufState::IDLE;
   prevFCTime = 0;
   isMinTimeUpdate = 0;
 
@@ -98,10 +97,13 @@ void IBOutBuf::sendOutMessage(IBWireMsg *p_msg) {
     IBDataMsg *p_dataMsg = (IBDataMsg *)p_msg;
 
     // track if we are in the middle of packet
-    if (!p_dataMsg->getFlitSn() && (p_dataMsg->getPacketLength() > 1))
-      state = IBOutBufState::INSIDE_PACKET;
-    else if (p_dataMsg->getFlitSn() + 1 == p_dataMsg->getPacketLength())
-      state = IBOutBufState::IDLE;
+    if ( p_dataMsg->getFlitSn() + 1 == p_dataMsg->getPacketLength() ) {
+      EV << "-I- prevPop now DATA_LAST_FLIT\n";
+      prevPop = IBPopType::DATA_LAST_FLIT;
+    } else {
+      EV << "-I- prevPop now DATA_FLIT\n";
+      prevPop = IBPopType::DATA_FLIT;
+    }
 
     FCTBS[p_msg->getVL()]++;
 
@@ -234,8 +236,9 @@ void IBOutBuf::handlePop()
     send(p_msg, "free");
   }
 
-  if (state == IBOutBufState::IDLE) {
+  if (prevPop != IBPopType::DATA_FLIT) {
     if (sendFlowControl()) {
+      EV << "-I- prevPop now FC_PACKET\n";
       prevPop = IBPopType::FC_PACKET;
       return;
     }
@@ -255,12 +258,8 @@ void IBOutBuf::handlePop()
       // the last credit of a packet always
       if ( p_cred->getFlitSn() + 1 == p_cred->getPacketLength() ) {
         packetStoreHist.collect( simTime() - packetHeadTimeStamp );
-        prevPop = IBPopType::DATA_LAST_FLIT;
-      } else {
-        if ( p_cred->getFlitSn() == 0 ) {
-          packetHeadTimeStamp = p_msg->getTimestamp();
-        }
-        prevPop = IBPopType::DATA_FLIT;
+      } else if ( p_cred->getFlitSn() == 0 ) {
+        packetHeadTimeStamp = p_msg->getTimestamp();
       }
     } else {
       EV << "-E- " << getFullPath() << " unknown message type to pop:"
@@ -270,7 +269,10 @@ void IBOutBuf::handlePop()
     // The queue is empty. Next message needs to immediately pop
     // so we clean this event
     EV << "-I- " << getFullPath() << " nothing to POP" << endl;
-    prevPop = IBPopType::NONE;
+    if (prevPop != IBPopType::DATA_FLIT) {
+      EV << "-I- prevPop now NONE\n";
+      prevPop = IBPopType::NONE;
+    }
   }
 
   qDepth.record(queue.length());
