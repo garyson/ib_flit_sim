@@ -86,6 +86,7 @@ class IBOutBuf : public cSimpleModule
   bool Enabled;        // Is this port enabled or is it part of a 8x/12x
   cQueue queue;             // holds the outstanding data
   int numDataCreditsQueued; // needed to make sure we do not overflow the qSize
+  unsigned int pendingFreeCount; // number of credits to hand back to VLArb
   IBPopType prevPop;        // last pop type (know when "free" msg)
   simtime_t prevFCTime;     // track the last time the VL0 flow control sent
   std::vector<long> prevSentFCCL;  // Sent FCCL per VL

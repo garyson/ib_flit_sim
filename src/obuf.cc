@@ -58,6 +58,7 @@ void IBOutBuf::initialize()
   prevPop = IBPopType::NONE;
   prevFCTime = 0;
   isMinTimeUpdate = 0;
+  pendingFreeCount = 0;
 
   for ( int i = 0; i < maxVL+1; i++ ) {
     prevSentFCTBS.push_back(-9999);
@@ -228,12 +229,12 @@ void IBOutBuf::handlePop()
   // if we got a pop - it means the previous message just left the
   // OBUF. In that case if it was a data credit packet we have now a
   // new space for it. tell the VLA.
-  if (prevPop == IBPopType::DATA_FLIT
-                              || prevPop == IBPopType::DATA_LAST_FLIT) {
+  if (pendingFreeCount > 0) {
     cMessage *p_msg = new cMessage("free", IB_FREE_MSG);
     EV << "-I- " << getFullPath() << " sending 'free' to VLA as last "
        << " packet just completed." << endl;
     send(p_msg, "free");
+    --pendingFreeCount;
   }
 
   if (prevPop != IBPopType::DATA_FLIT) {
@@ -251,6 +252,7 @@ void IBOutBuf::handlePop()
       IBDataMsg *p_cred = (IBDataMsg *)p_msg;
       EV << "-I- " << getFullPath() << " popped data message:"
          << p_cred->getName() << endl;
+      ++pendingFreeCount;
       sendOutMessage(p_msg);
 
       // we just popped a real credit
