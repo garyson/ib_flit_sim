@@ -21,10 +21,10 @@ network Test
         obuf: IBOutBuf;
 
     connections:
-        mock.out --> obuf.in;
-        mock.txCred --> obuf.rxCred;
+        mock.out --> ned.IdealChannel --> obuf.in;
+        mock.txCred --> ned.IdealChannel --> obuf.rxCred;
         mock.in <-- IB4XQDRWire <-- obuf.out;
-        mock.free <-- obuf.free;
+        mock.free <-- ned.IdealChannel <-- obuf.free;
 };
 
 %file: mock.ned
@@ -105,6 +105,12 @@ void Mock::handleMessage(cMessage *msg)
 	latestFCCL = fcmsg->getFCCL();
 	delete msg;
 	return;
+    }
+    if (msg->getArrivalGateId() == gate("free")->getId()
+            && msg->getKind() == IB_FREE_MSG) {
+        std::cout << "Ignoring VLArb free credit notification\n";
+        delete msg;
+        return;
     }
     if (msg->getArrivalGateId() != gate("in")->getId()) {
         std::cout << "ERROR: Wrong gate\n";
