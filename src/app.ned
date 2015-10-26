@@ -38,7 +38,8 @@ simple IBApp
   // - shape
   volatile double msg2msgGap @unit(ns); // extra delay between messages
 
-  volatile double initialDelay @unit(ns); // extra delay before sending first message
+  // extra delay before sending first message
+  volatile double initialDelay @unit(ns) = default(0ns);
 
   // - SQ
   volatile int msgSQ;
