@@ -7,3 +7,7 @@ by the OBUF on send.
 But I think that since OBUF needs reveisit - since it us not a fixed size buf
 and the arb crietria is actually never filling more than N? MTUs it is better
 to stop counting credits and do the full change
+
+(pmacarth) If the IBOutBuf can send a message immediately instead of queueing
+it, it will not send a message to the VLArb freeing the credit, as it would
+if the message were queued and then popped.
