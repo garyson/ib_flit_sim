@@ -43,6 +43,7 @@ void IBOutBuf::initialize()
   flowControlDelay.setRangeAutoUpper(0,10,1.2);
   qDepth.setName("Queue Depth");
 
+  curFlowCtrVL = 0;
   totalBytesSent = 0;
   firstPktSendTime = 0;
   flitsSources.setName("Flits Sources");
