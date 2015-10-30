@@ -26,12 +26,9 @@
 // * rxCred - where updates from VLArb with incoming FlowControl come
 //
 // Parameters
-// * CreditMinRate - the time between credit updates
 // * OutRate - the rate by which flits leave the buffer
 //
 // Internal Events
-// * MinTime - cause a new credit update packet to be inserted into
-//   the Q if required
 // * Pop - packet with one FLIT is sent through OUT if we have what
 //   to send
 //
