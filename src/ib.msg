@@ -33,7 +33,6 @@ enum IB_MSGS
   IB_DONE_MSG     = 10;
   IB_APP_MSG      = 11;
   IB_PUSH_MSG     = 12;
-  IB_TQ_LOAD_MSG  = 13;
   IB_DIM_REQ_MSG  = 14;
   IB_DIM_DONE_MSG = 15;
 }
