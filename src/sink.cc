@@ -144,8 +144,9 @@ void IBSink::consumeDataMsg(IBDataMsg *p_msg)
       doneMsg->setSrcLid(p_msg->getSrcLid());
       doneMsg->setMsgId(p_msg->getMsgIdx());
       send(doneMsg, "done");
-      delete p_msg;
   }
+
+  delete p_msg;
 }
 
 void IBSink::handleData(IBDataMsg *p_msg)

@@ -248,6 +248,7 @@ void IBApp::handleMessage(cMessage *p_msg){
           EV << "-I- " << getFullPath()
              << "Ready to send but queue is empty\n";
           idle = true;
+          delete p_msg;
           return;
       }
 
@@ -257,8 +258,8 @@ void IBApp::handleMessage(cMessage *p_msg){
       EV << "-I- " << getFullPath()
          << " sending new app message " << p_new->getName()
          << endl;
-      delete p_msg;
     }
+    delete p_msg;
   } else if (gate == this->findGate("in")) {
     if (msgDstMode != DST_QUEUE) {
         std::cerr << "Wrong mode to receive anything from in gate\n";
