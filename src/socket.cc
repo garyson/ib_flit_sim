@@ -7,6 +7,7 @@
 #include <cstring>
 
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <unistd.h>
 #include <sys/socket.h>
 
@@ -55,6 +56,14 @@ int getBoundSocket(const char *src_host, const char *src_port,
     if (ret < 0) {
         close(fd);
         throw SocketException(errno, "setsockopt SO_REUSEADDR");
+    }
+
+    if (socktype == SOCK_STREAM) {
+        int ret = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+        if (ret < 0) {
+            close(fd);
+            throw SocketException(errno, "setsockopt TCP_NODELAY");
+        }
     }
 
     ret = bind(fd, info->ai_addr, info->ai_addrlen);
