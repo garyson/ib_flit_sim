@@ -133,7 +133,9 @@ void IBSink::consumeDataMsg(IBDataMsg *p_msg)
   p_sentMsg->setWasLast(p_msg->getPacketLength() == p_msg->getFlitSn() + 1);
   send(p_sentMsg, "sent");
 
-  if (p_sentMsg->getWasLast() && this->notifyOnDone) {
+  if (p_sentMsg->getWasLast()
+          && p_msg->getMsgLen() == p_msg->getPktIdx() + 1
+          && this->notifyOnDone) {
       /* Tell the controller that we sent this message so that he can inform
        * Dimemas */
       char nameBuf[128];
