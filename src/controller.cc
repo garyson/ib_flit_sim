@@ -106,6 +106,7 @@ void Controller::initialize(){
       throw;
   }
 
+  this->msgIdx = 0;
   this->waitOnDimemas();
 }
 
