@@ -2,4 +2,4 @@ This directory holds a 32 nodes fabric built with switched of radix 8
 in 3 levels.
 
 To run:
-../../out/gcc-debug/src/ib_flit_sim -f is1_3l_32n.ini -c OneHot -u Cmdenv
+opp_run -l ../../src/ib_flit_sim.so -n ..:../../src -f is1_3l_32n.ini -c OneHot -u Cmdenv

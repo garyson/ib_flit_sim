@@ -46,7 +46,7 @@ sudo make install
 ```
 cd examples/test
 export NEDPATH=..:../../src
-../../out/gcc-debug/src/ib_flit_sim -c One -u Cmdenv
+opp_run -l ../../src/libib_flit_sim.so -c One -u Cmdenv
 ```
 
 You should see a message like this:

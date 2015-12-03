@@ -3,8 +3,19 @@ IB flow control scheme, Arbitration over multiple VLs and routing
 based on Linear Forwarding Tables.
 
 To run it:
-1. opp_makemake -f --deep -O out -X utils
+1. make makefiles
 2. make
+
+This will make a debug build by default.  To create an optimized build,
+add MODE=release like this:
+
+$ make MODE=release
+
+By default, this will build a shared library which is needed by the
+testsuite.  To build an executable instead, you need to rebuild the
+makefiles:
+
+$ make makefiles-exe
 
 cd into the example dir and look for a */README
 
