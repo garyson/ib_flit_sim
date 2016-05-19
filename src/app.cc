@@ -150,6 +150,7 @@ unsigned int IBApp::getMsgLenByDistribution()
 // relevant parameters and  allocate and init a new message
 IBAppMsg *IBApp::getNewMsg()
 {
+  static const unsigned int controlMessageSize = 64;
 
   unsigned int msgMtuLen_B; // MTU of packet. same for entire message.
   unsigned int msgLen_P;    // the message length in packets
@@ -210,7 +211,13 @@ IBAppMsg *IBApp::getNewMsg()
       auto in_msg = msgQueue.front();
       msgQueue.pop();
       msgDstLid = in_msg->getDstLid();
-      msgLen_B = in_msg->getLenBytes();
+      switch (in_msg->getKind()) {
+      case IB_DIM_SEND_MSG:
+          msgLen_B = in_msg->getLenBytes();
+          break;
+      default:
+          msgLen_B = controlMessageSize;
+      }
       ourMsgId = in_msg->getMsgId();
     }
     break;
@@ -265,7 +272,12 @@ void IBApp::handleMessage(cMessage *p_msg){
         std::cerr << "Wrong mode to receive anything from in gate\n";
         return;
     }
-    if (p_msg->getKind() != IB_DIM_REQ_MSG) {
+    switch (p_msg->getKind()) {
+    case IB_DIM_SEND_MSG:
+    case IB_DIM_RREQ_MSG:
+    case IB_DIM_RTR_MSG:
+        break;
+    default:
         std::cerr << "Got wrong message \"" << p_msg->getName()
                   << "\" (kind=" << p_msg->getKind() << ") on in gate\n";
         return;

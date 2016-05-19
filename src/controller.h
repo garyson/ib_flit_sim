@@ -101,13 +101,17 @@
 
 #include <omnetpp.h>
 
+#include <queue>
 #include <map>
 #include <memory>
 
 #include "socket.h"
 
+class DimReqMsg;
+
 using DimMessageID = unsigned int;
 using MessageTable = std::map<DimMessageID, std::unique_ptr<DimReqMsg> >;
+using MessageQueue = std::queue<DimReqMsg *>;
 
 /* A simple structure to uniquely identify a queue pair used by an instance of
  * the simulated application. */
@@ -135,8 +139,14 @@ class Controller : public cSimpleModule
   // Stop message used to return control to Dimemas
   cMessage stopMessage;
 
-  // Active message table; used to resolve completions
+  // Active message table; used to resolve completions for MPI data messages
   MessageTable active;
+
+  // Queues per MPI rank for rendezvous receive requests
+  std::map<std::pair<int, int>, MessageQueue> recvQueue;
+
+  // Number of rendezvous requests received
+  std::map<std::pair<int, int>, int> rreqCount;
 
   // Dimemas timescale
   double timescale;
@@ -150,16 +160,24 @@ class Controller : public cSimpleModule
   bool handleDimemasEnd(std::string args);
   bool handleDimemasStop(std::string args);
   bool handleDimemasSend(std::string args);
+  bool handleDimemasRReq(std::string args);
+  bool handleDimemasRTR(std::string args);
 
   unsigned int rank2lid(unsigned int rank) { return rankMapping[rank].lid; }
   unsigned int rank2qpn(unsigned int rank) { return rankMapping[rank].qpn; }
 
+  void sendMessage(DimReqMsg *req);
+
   // Initialize a new set of parameters for a new message
-  void startSendRecv(double timestamp,
+  DimReqMsg *makeMessage(double timestamp, IB_MSGS msgType,
                       unsigned int msgSrcLid, unsigned int msgDstLid,
                       unsigned int msgLen_B, std::string dimemasName);
 
   std::unique_ptr<DimReqMsg> lookupMessage(unsigned int msgId);
+  void matchRReq(DimReqMsg *rreq);
+  void handleRTR(DimReqMsg *rtr);
+  void enqueueRTR(DimReqMsg *rtr);
+  void handleSendCompletion(DimReqMsg *orig_msg, simtime_t when);
 
  protected:
   virtual void initialize();

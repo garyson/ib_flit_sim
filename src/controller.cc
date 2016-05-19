@@ -117,6 +117,8 @@ void Controller::waitOnDimemas()
         {"STOP", &Controller::handleDimemasStop},
         {"END", &Controller::handleDimemasEnd},
         {"FINISH", &Controller::handleDimemasFinish},
+        {"PROTO OK_TO_SEND", &Controller::handleDimemasRReq},
+        {"PROTO READY_TO_RECV", &Controller::handleDimemasRTR},
     };
 
     while (true) {
@@ -124,6 +126,7 @@ void Controller::waitOnDimemas()
         if (line.empty()) {
             return;
         }
+        EV << "-I- " << getFullPath() << " Received from Dimemas: " << line;
         bool matched = false;
         for (const auto &entry : table) {
             size_t length = entry.first.size();
@@ -144,7 +147,6 @@ void Controller::waitOnDimemas()
 
 bool Controller::handleDimemasFinish(std::string args)
 {
-    EV << "-I- " << getFullPath() << " Got Dimemas FINISH";
     /* This will throw an exception so this method never actually
      * returns. */
     this->endSimulation();
@@ -153,14 +155,11 @@ bool Controller::handleDimemasFinish(std::string args)
 
 bool Controller::handleDimemasEnd(std::string args)
 {
-    EV << "-I- " << getFullPath() << " Got Dimemas END " << args;
     return false;
 }
 
 bool Controller::handleDimemasStop(std::string args)
 {
-    EV << "-I- " << getFullPath() << " Got Dimemas STOP " << args;
-
     double timestamp = std::stod(args);
     simtime_t delay{timestamp * timescale};
     simtime_t cur = simTime();
@@ -171,10 +170,9 @@ bool Controller::handleDimemasStop(std::string args)
     return true;
 }
 
-bool Controller::handleDimemasSend(std::string args)
+/** Handle a PROTO OK_TO_SEND message received from Dimemas. */
+bool Controller::handleDimemasRReq(std::string args)
 {
-    EV << "-I- " << getFullPath() << " Got Dimemas SEND " << args;
-
     size_t index = 0;
     double timestamp = std::stod(args, &index);
     args = args.substr(index);
@@ -196,23 +194,118 @@ bool Controller::handleDimemasSend(std::string args)
     args = trim_string(args.substr(index));
 
     // generate a new message
-    startSendRecv(timestamp, srcRank, dstRank, msgSize, args);
-
-
+    auto p_msg = makeMessage(timestamp, IB_DIM_RREQ_MSG, srcRank, dstRank,
+                             msgSize, args);
+    sendMessage(p_msg);
 
     return true;
 }
 
-// Initialize the parameters for a new message by sampling the
-// relevant parameters and  allocate and init a new message
-void Controller::startSendRecv(double timestamp,
+/** Handle a PROTO READY_TO_RECV message received from Dimemas. */
+bool Controller::handleDimemasRTR(std::string args)
+{
+    size_t index = 0;
+    double timestamp = std::stod(args, &index);
+    args = args.substr(index);
+
+    index = 0;
+    unsigned int srcRank = std::stoi(args, &index);
+    args = args.substr(index);
+
+    index = 0;
+    unsigned int dstRank = std::stoi(args, &index);
+    args = args.substr(index);
+
+    index = 0;
+    UNUSED unsigned int tag = std::stoi(args, &index);
+    args = args.substr(index);
+
+    index = 0;
+    unsigned int msgSize = std::stoi(args, &index);
+    args = trim_string(args.substr(index));
+
+    // generate a new message
+    auto p_msg = makeMessage(timestamp, IB_DIM_RTR_MSG, dstRank, srcRank,
+                             msgSize, args);
+
+    auto iter = rreqCount.find(make_pair(srcRank, dstRank));
+    if (iter != rreqCount.end() && iter->second > 0) {
+        sendMessage(p_msg);
+    } else {
+        enqueueRTR(p_msg);
+    }
+
+    return true;
+}
+
+/** Handle a SEND message from Dimemas. */
+bool Controller::handleDimemasSend(std::string args)
+{
+    size_t index = 0;
+    double timestamp = std::stod(args, &index);
+    args = args.substr(index);
+
+    index = 0;
+    unsigned int srcRank = std::stoi(args, &index);
+    args = args.substr(index);
+
+    index = 0;
+    unsigned int dstRank = std::stoi(args, &index);
+    args = args.substr(index);
+
+    index = 0;
+    UNUSED unsigned int tag = std::stoi(args, &index);
+    args = args.substr(index);
+
+    index = 0;
+    unsigned int msgSize = std::stoi(args, &index);
+    args = trim_string(args.substr(index));
+
+    // generate a new message
+    auto p_msg = makeMessage(timestamp, IB_DIM_SEND_MSG, srcRank, dstRank,
+                             msgSize, args);
+    sendMessage(p_msg);
+
+    return true;
+}
+
+/** Place a new message from Dimemas at the end of the appropriate receive
+ * queue. */
+void Controller::enqueueRTR(DimReqMsg *req)
+{
+    auto key = make_pair(req->getDstRank(), req->getSrcRank());
+    auto &queue = recvQueue[key];
+    queue.push(req);
+}
+
+/** Sends a message to the application object indicated by the source rank. */
+void Controller::sendMessage(DimReqMsg *p_msg)
+{
+    simtime_t delay = p_msg->getInject_time();
+    simtime_t cur = simTime();
+    if (delay >= cur) {
+        sendDelayed(p_msg, delay - cur, "out", p_msg->getSrcRank());
+    } else {
+        /* Due to rounding error, the delay for this message would be negative.
+         *   Send immediately to avoid OMNet++ errors. */
+        send(p_msg, "out", p_msg->getSrcRank());
+    }
+
+    EV << "-I- " << getFullPath()
+       << " sending new controller message " << p_msg->getName()
+       << endl;
+}
+
+/** Creates a message object given the parameters. */
+DimReqMsg *Controller::makeMessage(double timestamp, IB_MSGS msgType,
                            unsigned int msgSrcRank, unsigned int msgDstRank,
                            unsigned int msgLen_B, std::string dimemasName)
 {
   DimReqMsg *p_msg;
   char name[128];
   sprintf(name, "%s-%d-%d", getFullPath().c_str(), msgSrcRank, this->msgIdx);
-  p_msg = new DimReqMsg(name, IB_DIM_REQ_MSG);
+  p_msg = new DimReqMsg(name, msgType);
+  p_msg->setInject_time(timestamp * timescale);
   p_msg->setSrcRank(msgSrcRank);
   p_msg->setSrcLid(rank2lid(msgSrcRank));
   p_msg->setMsgId(this->msgIdx);
@@ -226,19 +319,7 @@ void Controller::startSendRecv(double timestamp,
 
   this->msgIdx++;
 
-  simtime_t delay{timestamp * timescale};
-  simtime_t cur = simTime();
-  if (delay >= cur) {
-      sendDelayed(p_msg, delay - cur, "out", msgSrcRank);
-  } else {
-      /* Due to rounding error, the delay for this message would be negative.
-       *   Send immediately to avoid OMNet++ errors. */
-      send(p_msg, "out", msgSrcRank);
-  }
-
-  EV << "-I- " << getFullPath()
-     << " sending new controller message " << p_msg->getName()
-     << endl;
+  return p_msg;
 }
 
 std::unique_ptr<DimReqMsg>
@@ -252,6 +333,66 @@ Controller::lookupMessage(unsigned int msgId)
     auto our_ptr = std::move(data_msg_iter->second);
     active.erase(data_msg_iter);
     return our_ptr;
+}
+
+/** Called when a rendezvous request message corresponding to an MPI Send has
+ * reached its destination.  Sends the RTR if there is one in the queue;
+ * otherwise, enqueue this rendezvous request until a receive request is
+ * posted. */
+void Controller::matchRReq(DimReqMsg *rreq)
+{
+    auto key = make_pair(rreq->getSrcRank(), rreq->getDstRank());
+    auto &queue = recvQueue[key];
+    if (queue.empty()) {
+        rreqCount[key]++;
+    } else {
+        DimReqMsg *rtr = queue.front();
+        queue.pop();
+        if (rtr->getInject_time() < simTime()) {
+            rtr->setInject_time(simTime());
+        }
+        sendMessage(rtr);
+    }
+}
+
+/** Called when an RTR message corresponding to an MPI Recv has reached its
+ * destination.  Sends the message data. */
+void Controller::handleRTR(DimReqMsg *rtr)
+{
+    DimReqMsg *send = makeMessage(simTime().dbl(), IB_DIM_SEND_MSG,
+                                  rtr->getDstRank(), rtr->getSrcRank(),
+                                  rtr->getLenBytes(),
+                                  rtr->getContextString());
+    sendMessage(send);
+}
+
+/** Called when a data message has reached its destination.  Sends the
+ * completion notice to Dimemas. */
+void Controller::handleSendCompletion(DimReqMsg *orig_msg,
+                                      simtime_t when)
+{
+    std::string dimResponse{"COMPLETED SEND "};
+    dimResponse.append(std::to_string(when.dbl() / timescale));
+    dimResponse.append(" ");
+    dimResponse.append(std::to_string(orig_msg->getSrcRank()));
+    dimResponse.append(" ");
+    dimResponse.append(std::to_string(orig_msg->getDstRank()));
+    dimResponse.append(" ");
+    dimResponse.append(std::to_string(orig_msg->getLenBytes()));
+    dimResponse.append(" ");
+    dimResponse.append(orig_msg->getContextString());
+    EV << "-I- " << getFullPath() << " Send to Dimemas: "
+            << dimResponse << '\n';
+    sock->sendLine(dimResponse + "\n");
+    EV << "-I- " << getFullPath() << " Send to Dimemas: END\n";
+    sock->sendLine("END\n");
+
+    /* We are returning control to Dimemas *now*, so cancel the STOP that we
+     * just scheduled. */
+    this->cancelEvent(&this->stopMessage);
+
+    /* Let Dimemas react to the message completion. */
+    this->waitOnDimemas();
 }
 
 void Controller::handleMessage(cMessage *p_msg){
@@ -280,29 +421,22 @@ void Controller::handleMessage(cMessage *p_msg){
                     << done_msg->getName() << '\n';
       }
 
-      std::string dimResponse{"COMPLETED SEND "};
-      dimResponse.append(std::to_string(done_msg->getComplete_time().dbl()
-              / timescale));
-      dimResponse.append(" ");
-      dimResponse.append(std::to_string(orig_msg->getSrcRank()));
-      dimResponse.append(" ");
-      dimResponse.append(std::to_string(orig_msg->getDstRank()));
-      dimResponse.append(" ");
-      dimResponse.append(std::to_string(orig_msg->getLenBytes()));
-      dimResponse.append(" ");
-      dimResponse.append(orig_msg->getContextString());
-      EV << "-I- " << getFullPath() << " Send to Dimemas: "
-         << dimResponse << '\n';
-      sock->sendLine(dimResponse + "\n");
-      EV << "-I- " << getFullPath() << " Send to Dimemas: END\n";
-      sock->sendLine("END\n");
+      switch (orig_msg->getKind()) {
+      case IB_DIM_SEND_MSG:
+          this->handleSendCompletion(orig_msg.get(), done_msg->getComplete_time());
+          break;
 
-      /* We are returning control to Dimemas *now*, so cancel the STOP that we
-       * just scheduled. */
-      this->cancelEvent(&this->stopMessage);
+      case IB_DIM_RREQ_MSG:
+          this->matchRReq(orig_msg.get());
+          break;
 
-      /* Let Dimemas react to the message completion. */
-      this->waitOnDimemas();
+      case IB_DIM_RTR_MSG:
+          this->handleRTR(orig_msg.get());
+          break;
+
+      default:
+          abort();
+      }
 
       delete p_msg;
   }
