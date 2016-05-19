@@ -18,7 +18,7 @@ echo "+++ $(date) ${dir} Running co-simulation in new tmux window"
 tmux ${NEWW} -P -n omnet-run -d "
 	trap 'tmux wait-for -S omnet-run-lock' EXIT;
 	module load omnetpp;
-        opp_run -l ${MODELDIR}/src/libib_flit_sim.so -f ${MODELDIR}/networks/two_fdr_nodes.ini -n .:${MODELDIR}/networks:${MODELDIR}/src -u Cmdenv --result-dir=results 2>&1 | tee omnetpp.log
+        opp_run -l ${MODELDIR}/src/libib_flit_sim.so -f ${MODELDIR}/networks/two_fdr_nodes.ini -n ..:${MODELDIR}/networks:${MODELDIR}/src -u Cmdenv --result-dir=results 2>&1 | tee omnetpp.log
         "
 sleep 5
 tmux split-window -v -t omnet-run "module load dimemas;
