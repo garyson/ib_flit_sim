@@ -1,12 +1,36 @@
-#!/bin/sh
+#!/bin/bash
 
 module load toolchain/system omnetpp dimemas paraver
 
-tmux new-session -s omnet-run -d "../../out/gcc-debug/src/ib_flit_sim -n ..:../../src -c One -u Cmdenv 2>&1 | tee omnetpp.log"
-tmux split-window -v -t omnet-run "Dimemas -S 32K --dim trace.dim -venus -p predicted.prv dimemas.cfg 2>&1 | tee dimemas.log"
-tmux attach-session -t omnet-run
+MODELDIR=$(dirname $0)/../..
+TRACE_BASENAME=trace
 
-echo "Run is complete"
-echo "Dimemas output is in predicted.prv"
-echo "OMNet++ output is in results directory"
+prv2dim ${TRACE_BASENAME}.prv ${TRACE_BASENAME}.dim
+if [[ -z ${TMUX} ]]; then
+  echo "*** Starting new tmux session"
+  NEWW="new-session -s omnet-run"
+else
+  echo "+++ Using existing tmux session"
+  NEWW=new-window
+fi
+
+echo "+++ $(date) ${dir} Running co-simulation in new tmux window"
+tmux ${NEWW} -P -n omnet-run -d "
+	trap 'tmux wait-for -S omnet-run-lock' EXIT;
+	module load omnetpp;
+        opp_run -l ${MODELDIR}/src/libib_flit_sim.so -f ${MODELDIR}/networks/two_fdr_nodes.ini -n .:${MODELDIR}/networks:${MODELDIR}/src -u Cmdenv --result-dir=results 2>&1 | tee omnetpp.log
+        "
+sleep 5
+tmux split-window -v -t omnet-run "module load dimemas;
+        Dimemas -S 32M --dim ${TRACE_BASENAME}.dim -venus -p predicted.prv dimemas.cfg 2>&1 | tee dimemas.log"
+if [[ ${NEWW} == new-window ]]; then
+  tmux select-window -t omnet-run
+  tmux wait-for omnet-run-lock
+else
+  tmux attach-session -t omnet-run
+fi
+
+echo "+++ $(date) ${dir} co-simulation run is complete"
+echo "+++ Dimemas output is in predicted.prv"
+echo "+++ OMNet++ output is in results directory"
 echo
