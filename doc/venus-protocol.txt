@@ -1,0 +1,41 @@
+Venus Protocol
+--------------
+
+This has been reverse engineered from the venusclient implementation
+that is part of Dimemas, and the paper describing Venus [1].
+
+The protocol is text-based.  OMNet++ acts as the server and Dimemas as
+the client.  Each message is a list of commands, 1 per line, terminated
+with a line containing ``END''.
+
+Each simulator blocks once it has sent a message until it receives a
+message from the remote simulator.  Every message sent by Dimemas will
+contain a line of the form ``STOP <timestamp>'', indicating that OMNet++
+should stop simulating at that time and return control to Dimemas.
+OMNet++ will also stop simulating and return control to Dimemas if an
+event occurs which is of interest to Dimemas.
+
+When Dimemas has a message to be sent using the eager protocol, it will
+send a line as follows:
+
+SEND <timestamp> <src_rank> <dest_rank> <tag> <msg_size> <opaque_info>
+
+OMNet++ will inject this message into the simulation at the indicated
+time, and when it reaches the destination rank, OMNet++ sends back a
+line looking like this:
+
+COMPLETED SEND <timestamp> <src_rank> <dest_rank> <msg_size> <opaque_info>
+
+Notice that the tag is not sent on the return trip.  The timestamp is
+the timestamp that the message reached the destination.
+
+For messages to be sent using rendezvous, Dimemas sends two lines:
+
+PROTO OK_TO_SEND <timestamp> <src_rank> <dest_rank> <tag> <msg_size> ...
+PROTO READY_TO_RECV <timestamp> <src_rank> <dest_rank> <tag> <msg_size> <opaque_info>
+
+Note that only the opaque_info from the READY_TO_RECV is relevant.
+
+[1] Minkenberg, C. and Herrera, G. R.  ``Trace-driven Co-simulation of
+High-Performance Computing Systems using OMNet++.''  OMNet++ Workshop.
+Rome, Italy, 2009.
