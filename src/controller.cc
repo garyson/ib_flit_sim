@@ -71,9 +71,13 @@ void Controller::initialize(){
 
   const char *socketListenHost = par("socketListenHost");
   const char *socketListenPort = par("socketListenPort");
+  const char *ranksFile = "ranks.txt";
+  if (hasPar("ranksFile")) {
+      ranksFile = par("ranksFile");
+  }
 
   try {
-      ifstream f{"ranks.txt"};
+      ifstream f{ranksFile};
       std::string line;
       while (getline(f, line)) {
           std::istringstream ss(line);
