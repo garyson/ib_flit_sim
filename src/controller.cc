@@ -89,6 +89,12 @@ void Controller::initialize(){
           }
           this->rankMapping.emplace_back(lid, qpnum);
       }
+      if (!f.eof()) {
+          std::ostringstream os;
+          os << "Error reading rank to LID mappings from "
+             << ranksFile << "\n";
+          throw std::runtime_error(os.str());
+      }
   } catch (std::exception &ex) {
       std::cerr << ex.what() << '\n';
       throw;
