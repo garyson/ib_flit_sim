@@ -118,6 +118,9 @@ void Controller::initialize(){
 
   this->msgIdx = 0;
   this->waitOnDimemas();
+
+  eagerCount = 0;
+  rendezvousCount = 0;
 }
 
 void Controller::waitOnDimemas()
@@ -272,6 +275,7 @@ bool Controller::handleDimemasSend(std::string args)
     args = trim_string(args.substr(index));
 
     // generate a new message
+    ++eagerCount;
     auto p_msg = makeMessage(timestamp, IB_DIM_SEND_MSG, srcRank, dstRank,
                              msgSize, args);
     sendMessage(p_msg);
@@ -374,6 +378,7 @@ void Controller::handleRTR(DimReqMsg *rtr)
                                   rtr->getLenBytes(),
                                   rtr->getContextString());
     sendMessage(send);
+    ++rendezvousCount;
 }
 
 /** Called when a data message has reached its destination.  Sends the
@@ -454,5 +459,9 @@ void Controller::handleMessage(cMessage *p_msg){
 
 void Controller::finish()
 {
+  std::cerr << "Controller: eagerCount: " << eagerCount << "\n";
+  std::cerr << "Controller: rendezvousCount: " << rendezvousCount << "\n";
+  std::cerr << "Controller: totalCount: "
+            << eagerCount + rendezvousCount << "\n";
   sock = nullptr;
 }

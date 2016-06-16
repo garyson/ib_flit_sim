@@ -151,6 +151,9 @@ class Controller : public cSimpleModule
   // Dimemas timescale
   double timescale;
 
+  unsigned long long eagerCount;
+  unsigned long long rendezvousCount;
+
   // methods
  private:
 
