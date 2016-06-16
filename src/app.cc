@@ -227,6 +227,11 @@ IBAppMsg *IBApp::getNewMsg()
   }
 
   msgLen_P = std::ceil(msgLen_B / (float)msgMtuLen_B);
+  if (msgLen_P == 0) {
+	  /* 0 length messages still have 1 packet with headers */
+	  msgLen_B = 1;
+	  msgLen_P = 1;
+  }
 
   IBAppMsg *p_msg;
   char name[128];
