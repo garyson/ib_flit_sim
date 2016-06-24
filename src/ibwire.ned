@@ -27,8 +27,9 @@ channel IBWire extends ned.DatarateChannel
 {
       double width;                 // the output link width ,4,8,12 lanes
       double speed @unit(Gbps);    // the output speed 2.5, 5.0, 10.0
+      double overhead;             // overhead due to wire encoding
 
-      datarate = width * speed * 0.8; // Disparity - 8b/10b encoding
+      datarate = width * speed * overhead;
 }
 
 //
@@ -38,22 +39,26 @@ channel IB4XFDRWire extends IBWire
 {
       width = 4;                 // the output link width
       speed = 14.0Gbps;          // the output speed
+      overhead = 64.0 / 66.0;
 }
 
 channel IB4XQDRWire extends IBWire
 {
       width = 4;                 // the output link width
       speed = 10Gbps;            // the output speed
+      overhead = 0.8;
 }
 
 channel IB4XDDRWire extends IBWire
 {
       width = 4;                 // the output link width
       speed = 5.0Gbps;           // the output speed
+      overhead = 0.8;
 }
 
 channel IB4XSDRWire extends IBWire
 {
       width = 4;                 // the output link width
       speed = 2.5Gbps;           // the output speed
+      overhead = 0.8;
 }
