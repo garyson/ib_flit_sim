@@ -133,6 +133,7 @@ IBOutBuf::qMessage(IBDataMsg *p_msg) {
 
     queue.insert(p_msg);
     qDepth.record(queue.length());
+    qDepthHist.collect(queue.length());
   } else {
     // track the time this PACKET (all credits) spent in the Q
     // the last credit of a packet always
@@ -141,6 +142,7 @@ IBOutBuf::qMessage(IBDataMsg *p_msg) {
     } else if ( p_msg->getFlitSn() == 0 ) {
       packetHeadTimeStamp = p_msg->getTimestamp();
     }
+    qDepthHist.collect(0);
     sendOutMessage(p_msg);
   }
 } // qMessage
@@ -175,8 +177,8 @@ int IBOutBuf::sendFlowControl()
     if (i == 0) {
       // avoid the first send...
       if (prevFCTime != 0)
-        // flowControlDelay.collect(simTime() - prevFCTime);
-        prevFCTime = simTime();
+        flowControlDelay.collect(simTime() - prevFCTime);
+      prevFCTime = simTime();
     }
 
     // We may have ignored prevSentFCTBS[i] == FCTBS[i] since the other side
@@ -298,26 +300,25 @@ void IBOutBuf::handleMessage(cMessage *p_msg)
 
 void IBOutBuf::finish()
 {
-  /* EV << "STAT: " << getFullPath() << " Data Packet Q time num/avg/max/std:"
+    EV << "STAT: " << getFullPath() << " Data Packet Q time num/avg/max/std:"
      << packetStoreHist.getCount() << " / "
      << packetStoreHist.getMean() << " / "
      << packetStoreHist.getMax() << " / "
      << packetStoreHist.getStddev() << endl;
-     EV << "STAT: " << getFullPath() << " Q depth num/avg/max/std:"
+    EV << "STAT: " << getFullPath() << " Q depth num/avg/max/std:"
      << qDepthHist.getCount() << " / "
      << qDepthHist.getMean() << " / "
      << qDepthHist.getMax() << " / "
      << qDepthHist.getStddev() << endl;
-     EV << "STAT: " << getFullPath() << " FlowControl Delay num/avg/max/std:"
+    EV << "STAT: " << getFullPath() << " FlowControl Delay num/avg/max/std:"
      << flowControlDelay.getCount() << " / "
      << flowControlDelay.getMean() << " / "
      << flowControlDelay.getMax() << " / "
      << flowControlDelay.getStddev() << endl;
-  */
   double oBW = totalBytesSent / (simTime() - firstPktSendTime);
   recordScalar("Output BW (Byte/Sec)", oBW);
   flitsSources.record();
-  // EV << "STAT: " << getFullPath() << " Flit Sources:" << endl << flitsSources.detailedInfo() << endl;
+  EV << "STAT: " << getFullPath() << " Flit Sources:" << endl << flitsSources.detailedInfo() << endl;
 }
 
 IBOutBuf::~IBOutBuf() {

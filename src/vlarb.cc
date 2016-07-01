@@ -97,8 +97,6 @@ void IBVLArb::initialize()
   WATCH(popDelayPerByte_s);
 
   // Initiazlize the statistical collection elements
-  portXmitWaitHist.setName("Packet Waits for Credits");
-  portXmitWaitHist.setRangeAutoUpper(0, 10, 1);
   vl0Credits.setName("free credits on VL0");
   vl1Credits.setName("free credits on VL1");
   readyData.setName("Binary coded VL's with data");
@@ -108,6 +106,10 @@ void IBVLArb::initialize()
   numInPorts = gateSize("in");
   unsigned int numSentPorts = gateSize("sent");
   ASSERT(numInPorts == numSentPorts);
+
+  for (unsigned int pn = 0; pn < numInPorts; pn++ ) {
+      portXmitWait.push_back(0);
+  }
 
   // we need a two dimentional array of data packets
   inPktHoqPerVL = new IBDataMsg**[numInPorts];
@@ -259,6 +261,7 @@ int IBVLArb::isValidArbitration(unsigned int portNum, unsigned int vl,
     EV << "-I- " << getFullPath()
        << " not enough free OBUF credits:" << obufFree << " requierd:"
        << numPacketCredits <<" invalid arbitration." << endl;
+    portXmitWait[portNum]++;
     return 0;
   }
 
@@ -274,6 +277,7 @@ int IBVLArb::isValidArbitration(unsigned int portNum, unsigned int vl,
     if (!p_inBuf->incrBusyUsedPorts()) {
       EV << "-I- " << getFullPath()
          << " no free ports on IBUF - invalid arbitration." << endl;
+      portXmitWait[portNum]++;
       return 0;
     }
   }
@@ -466,6 +470,7 @@ IBVLArb::findNextSendOnVL0( unsigned int &curPortNum )
            << " required for sending:"
            << p_flit->getName() << " on port:" << portNum
            << " vl:" << 0 << endl;
+        portXmitWait[portNum]++;
       }
     }
   }
@@ -808,12 +813,10 @@ void IBVLArb::handleMessage(cMessage *p_msg)
 
 void IBVLArb::finish()
 {
-  /*ev << "STAT: " << getFullPath() << " Wait for credits num/avg/max/std "
-    << portXmitWaitHist.getCount()
-    << " / " << portXmitWaitHist.getMean()
-    << " / " << portXmitWaitHist.getMax()
-    << " / " << portXmitWaitHist.getStddev() << endl;
-  */
+  for (unsigned int pn = 0; pn < numInPorts; ++pn) {
+    std::cerr << "STAT: " << getFullPath() << " PortXmitWait[" << pn << "] = "
+      << portXmitWait[pn] << '\n';
+  }
 }
 
 IBVLArb::~IBVLArb() {

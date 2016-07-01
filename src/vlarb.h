@@ -129,7 +129,7 @@ class IBVLArb: public cSimpleModule
   cOutVector vl1Credits;  // the credits on VL1
   cOutVector readyData;   // the VLs with ready data in binaru code
   cOutVector arbDecision; // the resulting VL arbitrated -1 is invalid
-  cLongHistogram portXmitWaitHist;
+  std::vector<long> portXmitWait;
 
  public:
   // return 1 if the HoQ for that port/VL is free
