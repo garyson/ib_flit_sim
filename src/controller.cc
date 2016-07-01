@@ -387,7 +387,7 @@ void Controller::handleSendCompletion(DimReqMsg *orig_msg,
                                       simtime_t when)
 {
     std::string dimResponse{"COMPLETED SEND "};
-    dimResponse.append(std::to_string(when.dbl() / timescale));
+    dimResponse.append(std::to_string(when.inUnit(-9)));
     dimResponse.append(" ");
     dimResponse.append(std::to_string(orig_msg->getSrcRank()));
     dimResponse.append(" ");
@@ -417,7 +417,7 @@ void Controller::handleMessage(cMessage *p_msg){
           return;
       }
       std::string dimResponse{"STOP REACHED "};
-      dimResponse.append(std::to_string(simTime().dbl() / timescale));
+      dimResponse.append(std::to_string(simTime().inUnit(-9)));
       EV << "-I- " << getFullPath() << " Send to Dimemas: "
          << dimResponse << '\n';
       sock->sendLine(dimResponse + "\n");
