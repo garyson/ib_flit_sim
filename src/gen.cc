@@ -317,6 +317,10 @@ void IBGenerator::sendDataOut(IBDataMsg *p_msg){
   unsigned int bytes = p_msg->getByteLength();
   double delay_ns = ((double)par("popDlyPerByte"))*bytes;
 
+  if (p_msg->getFlitSn() == 1 && p_msg->getPktIdx() == 0) {
+      delay_ns += (double)par("pkt2PktGap");
+  }
+
   // time stamp to enable tracking time in Fabric
   p_msg->setInjectionTime(simTime()+delay_ns*1e-9);
   p_msg->setTimestamp(simTime()+delay_ns*1e-9);
