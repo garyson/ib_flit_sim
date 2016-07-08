@@ -127,6 +127,11 @@ bool IBGenerator::arbitrateApps()
   // try to stay with current app if possible
   if (appMsgs[curApp]) {
     unsigned vl = vlBySQ(appMsgs[curApp]->getSQ());
+    if ((appMsgs[curApp]->getFlitIdx() != 0)) {
+      /* Non-first flit, we cannot switch apps!!! */
+      EV << "-I" << getFullPath() << " cannot arbitrate in the middle of packet\n";
+      return true;
+    }
     if ((numContPkts < maxContPkts) &&
         ((unsigned)VLQ[vl].length() < maxQueuedPerVL)) {
       EV << "-I-" << getFullPath() << " arbitrate apps continue" << endl;
@@ -143,9 +148,13 @@ bool IBGenerator::arbitrateApps()
     if (appMsgs[a]) {
       unsigned vl = vlBySQ(appMsgs[a]->getSQ());
       if ((unsigned)VLQ[vl].length() < maxQueuedPerVL) {
-        curApp = a;
         EV << "-I-" << getFullPath() << " arbitrate apps selected:"
            << a << endl;
+        if (curApp != a && appMsgs[curApp]
+			&& appMsgs[curApp]->getFlitIdx() != 0) {
+		opp_error("Arbitrate switched apps with packet in progress\n");
+	}
+        curApp = a;
         found = true;
       } else {
         EV << "-I-" << getFullPath() << " skipping app:" << a
@@ -305,9 +314,6 @@ void IBGenerator::handleApp(IBAppMsg *p_msg){
        << " being served" << endl;
     return;
   }
-
-  // force the new app to be arbitrated
-  curApp = a;
 
   genNextAppFLIT();
 }
