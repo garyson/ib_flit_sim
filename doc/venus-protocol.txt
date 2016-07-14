@@ -18,21 +18,24 @@ event occurs which is of interest to Dimemas.
 When Dimemas has a message to be sent using the eager protocol, it will
 send a line as follows:
 
-SEND <timestamp> <src_rank> <dest_rank> <tag> <msg_size> <opaque_info>
+SEND <timestamp> <src_node> <dest_node> <tag> <msg_size> <opaque_info>
+
+Note that the src_node and dest_node are for the hosts, not for the
+individual processes (ranks).
 
 OMNet++ will inject this message into the simulation at the indicated
-time, and when it reaches the destination rank, OMNet++ sends back a
+time, and when it reaches the destination node, OMNet++ sends back a
 line looking like this:
 
-COMPLETED SEND <timestamp> <src_rank> <dest_rank> <msg_size> <opaque_info>
+COMPLETED SEND <timestamp> <src_node> <dest_node> <msg_size> <opaque_info>
 
 Notice that the tag is not sent on the return trip.  The timestamp is
 the timestamp that the message reached the destination.
 
 For messages to be sent using rendezvous, Dimemas sends two lines:
 
-PROTO OK_TO_SEND <timestamp> <src_rank> <dest_rank> <tag> <msg_size> ...
-PROTO READY_TO_RECV <timestamp> <src_rank> <dest_rank> <tag> <msg_size> <opaque_info>
+PROTO OK_TO_SEND <timestamp> <src_node> <dest_node> <tag> <msg_size> ...
+PROTO READY_TO_RECV <timestamp> <src_node> <dest_node> <tag> <msg_size> <opaque_info>
 
 Note that only the opaque_info from the READY_TO_RECV is relevant.
 

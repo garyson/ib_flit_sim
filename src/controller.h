@@ -134,8 +134,6 @@ class Controller : public cSimpleModule
   // Server socket used for communication with Dimemas
   std::unique_ptr<Socket> sock;
 
-  std::vector<QPIdentifier> rankMapping;
-
   // Stop message used to return control to Dimemas
   cMessage stopMessage;
 
@@ -165,9 +163,6 @@ class Controller : public cSimpleModule
   bool handleDimemasSend(std::string args);
   bool handleDimemasRReq(std::string args);
   bool handleDimemasRTR(std::string args);
-
-  unsigned int rank2lid(unsigned int rank) { return rankMapping[rank].lid; }
-  unsigned int rank2qpn(unsigned int rank) { return rankMapping[rank].qpn; }
 
   void sendMessage(DimReqMsg *req);
 

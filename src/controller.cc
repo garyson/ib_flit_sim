@@ -71,34 +71,6 @@ void Controller::initialize(){
 
   const char *socketListenHost = par("socketListenHost");
   const char *socketListenPort = par("socketListenPort");
-  const char *ranksFile = "ranks.txt";
-  if (hasPar("ranksFile")) {
-      ranksFile = par("ranksFile");
-  }
-
-  try {
-      ifstream f{ranksFile};
-      std::string line;
-      while (getline(f, line)) {
-          std::istringstream ss(line);
-          int lid;
-          int qpnum;
-          ss >> lid >> qpnum;
-          if (!ss) {
-              throw std::runtime_error("invalid rank identifier");
-          }
-          this->rankMapping.emplace_back(lid, qpnum);
-      }
-      if (!f.eof()) {
-          std::ostringstream os;
-          os << "Error reading rank to LID mappings from "
-             << ranksFile << "\n";
-          throw std::runtime_error(os.str());
-      }
-  } catch (std::exception &ex) {
-      std::cerr << ex.what() << '\n';
-      throw;
-  }
 
   try {
   // start listening socket
@@ -191,11 +163,11 @@ bool Controller::handleDimemasRReq(std::string args)
     args = args.substr(index);
 
     index = 0;
-    unsigned int srcRank = std::stoi(args, &index);
+    unsigned int srcNode = std::stoi(args, &index);
     args = args.substr(index);
 
     index = 0;
-    unsigned int dstRank = std::stoi(args, &index);
+    unsigned int dstNode = std::stoi(args, &index);
     args = args.substr(index);
 
     index = 0;
@@ -207,7 +179,7 @@ bool Controller::handleDimemasRReq(std::string args)
     args = trim_string(args.substr(index));
 
     // generate a new message
-    auto p_msg = makeMessage(timestamp, IB_DIM_RREQ_MSG, srcRank, dstRank,
+    auto p_msg = makeMessage(timestamp, IB_DIM_RREQ_MSG, srcNode, dstNode,
                              msgSize, args);
     sendMessage(p_msg);
 
@@ -222,11 +194,11 @@ bool Controller::handleDimemasRTR(std::string args)
     args = args.substr(index);
 
     index = 0;
-    unsigned int srcRank = std::stoi(args, &index);
+    unsigned int srcNode = std::stoi(args, &index);
     args = args.substr(index);
 
     index = 0;
-    unsigned int dstRank = std::stoi(args, &index);
+    unsigned int dstNode = std::stoi(args, &index);
     args = args.substr(index);
 
     index = 0;
@@ -238,10 +210,10 @@ bool Controller::handleDimemasRTR(std::string args)
     args = trim_string(args.substr(index));
 
     // generate a new message
-    auto p_msg = makeMessage(timestamp, IB_DIM_RTR_MSG, dstRank, srcRank,
+    auto p_msg = makeMessage(timestamp, IB_DIM_RTR_MSG, dstNode, srcNode,
                              msgSize, args);
 
-    auto iter = rreqCount.find(make_pair(srcRank, dstRank));
+    auto iter = rreqCount.find(make_pair(srcNode, dstNode));
     if (iter != rreqCount.end() && iter->second > 0) {
         sendMessage(p_msg);
     } else {
@@ -259,11 +231,11 @@ bool Controller::handleDimemasSend(std::string args)
     args = args.substr(index);
 
     index = 0;
-    unsigned int srcRank = std::stoi(args, &index);
+    unsigned int srcNode = std::stoi(args, &index);
     args = args.substr(index);
 
     index = 0;
-    unsigned int dstRank = std::stoi(args, &index);
+    unsigned int dstNode = std::stoi(args, &index);
     args = args.substr(index);
 
     index = 0;
@@ -276,7 +248,7 @@ bool Controller::handleDimemasSend(std::string args)
 
     // generate a new message
     ++eagerCount;
-    auto p_msg = makeMessage(timestamp, IB_DIM_SEND_MSG, srcRank, dstRank,
+    auto p_msg = makeMessage(timestamp, IB_DIM_SEND_MSG, srcNode, dstNode,
                              msgSize, args);
     sendMessage(p_msg);
 
@@ -287,7 +259,7 @@ bool Controller::handleDimemasSend(std::string args)
  * queue. */
 void Controller::enqueueRTR(DimReqMsg *req)
 {
-    auto key = make_pair(req->getDstRank(), req->getSrcRank());
+    auto key = make_pair(req->getDstNode(), req->getSrcNode());
     auto &queue = recvQueue[key];
     queue.push(req);
 }
@@ -298,11 +270,11 @@ void Controller::sendMessage(DimReqMsg *p_msg)
     simtime_t delay = p_msg->getInject_time();
     simtime_t cur = simTime();
     if (delay >= cur) {
-        sendDelayed(p_msg, delay - cur, "out", p_msg->getSrcRank());
+        sendDelayed(p_msg, delay - cur, "out", p_msg->getSrcNode());
     } else {
         /* Due to rounding error, the delay for this message would be negative.
          *   Send immediately to avoid OMNet++ errors. */
-        send(p_msg, "out", p_msg->getSrcRank());
+        send(p_msg, "out", p_msg->getSrcNode());
     }
 
     EV << "-I- " << getFullPath()
@@ -312,19 +284,19 @@ void Controller::sendMessage(DimReqMsg *p_msg)
 
 /** Creates a message object given the parameters. */
 DimReqMsg *Controller::makeMessage(double timestamp, IB_MSGS msgType,
-                           unsigned int msgSrcRank, unsigned int msgDstRank,
+                           unsigned int msgSrcNode, unsigned int msgDstNode,
                            unsigned int msgLen_B, std::string dimemasName)
 {
   DimReqMsg *p_msg;
   char name[128];
-  sprintf(name, "%s-%d-%d", getFullPath().c_str(), msgSrcRank, this->msgIdx);
+  sprintf(name, "%s-%d-%d-%d", getFullPath().c_str(), msgSrcNode, this->msgIdx, msgDstNode);
   p_msg = new DimReqMsg(name, msgType);
   p_msg->setInject_time(timestamp * timescale);
-  p_msg->setSrcRank(msgSrcRank);
-  p_msg->setSrcLid(rank2lid(msgSrcRank));
+  p_msg->setSrcNode(msgSrcNode);
+  p_msg->setSrcLid(msgSrcNode + 1);
   p_msg->setMsgId(this->msgIdx);
-  p_msg->setDstRank(msgDstRank);
-  p_msg->setDstLid(rank2lid(msgDstRank));
+  p_msg->setDstNode(msgDstNode);
+  p_msg->setDstLid(msgDstNode + 1);
   p_msg->setLenBytes(msgLen_B);
   p_msg->setContextString(dimemasName.c_str());
 
@@ -355,7 +327,7 @@ Controller::lookupMessage(unsigned int msgId)
  * posted. */
 void Controller::matchRReq(DimReqMsg *rreq)
 {
-    auto key = make_pair(rreq->getSrcRank(), rreq->getDstRank());
+    auto key = make_pair(rreq->getSrcNode(), rreq->getDstNode());
     auto &queue = recvQueue[key];
     if (queue.empty()) {
         rreqCount[key]++;
@@ -374,7 +346,7 @@ void Controller::matchRReq(DimReqMsg *rreq)
 void Controller::handleRTR(DimReqMsg *rtr)
 {
     DimReqMsg *send = makeMessage(simTime().dbl(), IB_DIM_SEND_MSG,
-                                  rtr->getDstRank(), rtr->getSrcRank(),
+                                  rtr->getDstNode(), rtr->getSrcNode(),
                                   rtr->getLenBytes(),
                                   rtr->getContextString());
     sendMessage(send);
@@ -389,9 +361,9 @@ void Controller::handleSendCompletion(DimReqMsg *orig_msg,
     std::string dimResponse{"COMPLETED SEND "};
     dimResponse.append(std::to_string(when.inUnit(-9)));
     dimResponse.append(" ");
-    dimResponse.append(std::to_string(orig_msg->getSrcRank()));
+    dimResponse.append(std::to_string(orig_msg->getSrcNode()));
     dimResponse.append(" ");
-    dimResponse.append(std::to_string(orig_msg->getDstRank()));
+    dimResponse.append(std::to_string(orig_msg->getDstNode()));
     dimResponse.append(" ");
     dimResponse.append(std::to_string(orig_msg->getLenBytes()));
     dimResponse.append(" ");
