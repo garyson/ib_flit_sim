@@ -163,10 +163,6 @@ int IBOutBuf::sendFlowControl()
   static long flowCtrlId = 0;
   int sentUpdate = 0;
 
-  // we should not continue if the Q is not empty if we aren't in mintime mode
-  if (! queue.empty())
-    return(0);
-
   if (curFlowCtrVL >= maxVL+1) {
     curFlowCtrVL = 0;
   }
