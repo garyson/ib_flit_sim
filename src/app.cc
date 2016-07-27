@@ -128,6 +128,9 @@ void IBApp::initialize(){
 
   // if we are in param mode we may be getting a 0 as DST and thus keep quite
   double delay_ns = par("initialDelay");
+  if (msgDstMode == DST_QUEUE) {
+      delay_ns = 0;
+  }
   if (msgDstMode == DST_PARAM) {
     int dstLid = par("dstLid");
     if (dstLid)
