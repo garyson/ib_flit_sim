@@ -26,7 +26,6 @@ Internal data structures:
     hcas: list of HCAs
        - name
        - lid
-       - appCount
        - guid (16 byte hex string)
     switches: list of switches, contains connections to HCAs
        - name
@@ -142,7 +141,7 @@ def output_ned(name, ranks, hcas, switches):
             outh.write('\t\t{}: HCA {{\n'.format(hca['name']))
             outh.write('\t\t\tparameters:\n')
             outh.write('\t\t\t\tsrcLid = {};\n'.format(hca['lid']))
-            outh.write('\t\t\t\tappCount = {};\n'.format(hca['appCount']))
+            outh.write('\t\t\t\tappCount = 1;\n')
             outh.write('\t\t}\n')
         for switch in switches:
             outh.write('\t\t{}: Switch {{\n'.format(switch['name']))
