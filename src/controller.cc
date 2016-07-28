@@ -359,7 +359,7 @@ void Controller::handleSendCompletion(DimReqMsg *orig_msg,
                                       simtime_t when)
 {
     std::string dimResponse{"COMPLETED SEND "};
-    dimResponse.append(std::to_string(when.inUnit(-9)));
+    dimResponse.append(std::to_string(when.inUnit(SIMTIME_NS)));
     dimResponse.append(" ");
     dimResponse.append(std::to_string(orig_msg->getSrcNode()));
     dimResponse.append(" ");
