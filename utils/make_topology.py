@@ -231,14 +231,24 @@ class Network:
 
     def parse_ranktohost_csv(self, filename):
         """Parse the list of hosts accessible to MPI."""
-        self.ranks = set()
+        self.ranks = list()
         with open(filename) as inh:
             inh.readline()
             line = inh.readline()
             while line:
-                self.ranks.add(line.rstrip().split(',')[1])
+                hca = self.get_hca(line.rstrip().split(',')[1])
+                self.ranks.append(hca)
                 line = inh.readline()
         return self.ranks
+
+    def _output_sddf_rank_array(self):
+        res = ""
+        for rank in self.ranks:
+            for hcaid, hca in enumerate(self.hcas):
+                if hca == rank:
+                    res += str(hcaid) + ','
+                    continue
+        return res[0:-1]
 
     def _output_fdbs(self):
         """Output the filtering database in format for OMNet++ IB model."""
@@ -264,8 +274,11 @@ class Network:
                 switch.output_ned(outh)
             outh.write('\t\tcontroller: Controller {\n')
             outh.write('\t\t\tgates:\n')
-            outh.write('\t\t\t\tout[{}];\n'.format(len(self.ranks)))
-            outh.write('\t\t\t\tdone[{}];\n'.format(len(self.ranks)))
+            rankset = set()
+            for rank in self.ranks:
+                rankset.add(rank)
+            outh.write('\t\t\t\tout[{}];\n'.format(len(rankset)))
+            outh.write('\t\t\t\tdone[{}];\n'.format(len(rankset)))
             outh.write('\t\t}\n')
             outh.write('\tconnections:\n')
             for switch in self.switches:
@@ -273,15 +286,9 @@ class Network:
                     outh.write('\t\t{}.port <--> IB{}Wire <--> {}.port[{}];\n'.format(
                         switch.get_port_remote(portid).name,
                         switch.get_port_speed(portid), switch.name, portid))
-            for rank, hcaname in enumerate(self.ranks):
-                hca = None
-                hca = self.find_hca(hcaname)
-                if hca is None:
-                    print("Warning: HCA {} not found\n".format(hcaname),
-                          file=sys.stderr)
-                    continue
+            for rank, hca in enumerate(rankset):
                 outh.write('\t\tcontroller.out[{}] --> {}.msgIn[0];\n'.format(
-                    rank, hcaname))
+                    rank, hca.name))
                 outh.write('\t\t{}.msgDone --> controller.done[{}];\n'.format(
                     hca.name, rank))
             outh.write('}\n')
@@ -294,11 +301,20 @@ class Network:
         with open('{}.ini'.format(self.name), 'w') as outf:
             outf.write(template.render(name=self.name, switches=self.switches))
 
+    def _output_dimemas_cfg(self):
+        """Output the dimemas CFG file."""
+        base_dir = '/home/pmacarth/src/omnetpp-workspace/ib_model/utils'
+        env = Environment(loader=FileSystemLoader(base_dir))
+        template = env.get_template('dimemas.cfg.j2')
+        with open('{}.dimemas.cfg'.format(self.name), 'w') as outf:
+            outf.write(template.render(network=self, processors_per_node=16))
+
     def output(self):
         """Output all configuration for the OMNet++ IB model."""
         self._output_ned()
         self._output_fdbs()
         self._output_ini()
+        self._output_dimemas_cfg()
 
 
 def main():
