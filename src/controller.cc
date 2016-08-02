@@ -282,6 +282,12 @@ void Controller::sendMessage(DimReqMsg *p_msg)
        << endl;
 }
 
+int Controller::getLid(unsigned int node)
+{
+    cModule *end = gate("out", node)->getPathEndGate()->getOwnerModule()->getParentModule();
+    return end->par("srcLid");
+}
+
 /** Creates a message object given the parameters. */
 DimReqMsg *Controller::makeMessage(double timestamp, IB_MSGS msgType,
                            unsigned int msgSrcNode, unsigned int msgDstNode,
@@ -293,10 +299,10 @@ DimReqMsg *Controller::makeMessage(double timestamp, IB_MSGS msgType,
   p_msg = new DimReqMsg(name, msgType);
   p_msg->setInject_time(timestamp * timescale);
   p_msg->setSrcNode(msgSrcNode);
-  p_msg->setSrcLid(msgSrcNode + 1);
+  p_msg->setSrcLid(getLid(msgSrcNode));
   p_msg->setMsgId(this->msgIdx);
   p_msg->setDstNode(msgDstNode);
-  p_msg->setDstLid(msgDstNode + 1);
+  p_msg->setDstLid(getLid(msgDstNode));
   p_msg->setLenBytes(msgLen_B);
   p_msg->setContextString(dimemasName.c_str());
 

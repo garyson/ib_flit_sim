@@ -177,6 +177,8 @@ class Controller : public cSimpleModule
   void enqueueRTR(DimReqMsg *rtr);
   void handleSendCompletion(DimReqMsg *orig_msg, simtime_t when);
 
+  int getLid(unsigned int node);
+
  protected:
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
