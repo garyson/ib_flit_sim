@@ -6,7 +6,7 @@
 **.result-recording-modes = default
 **.scalar-recording = true
 
-network = ib_model.networks.two_fdr_nodes
+network = {{ name }}
 
 # this line is for Cmdenv
 print-undisposed = false
@@ -68,9 +68,9 @@ include /home/pmacarth/src/omnetpp-workspace/ib_model/networks/pcie_8x_g3.ini
 # SWITCH
 ##################################################################
 # generated file holding port groups and FDBs vector indexes
-**.SW**.fdbsVecFile = "/home/pmacarth/src/omnetpp-workspace/ib_model/networks/{{ name }}.fdbs"
+**.SW**.fdbsVecFile = "{{ name }}.fdbs"
 {% for switch in switches %}
-**.{{ switch.name }}**.fdbIndex = {{ loop.index }}
+**.{{ switch.name }}**.fdbIndex = {{ loop.index - 1 }}
 {% endfor %}
 
 **.pktFwdType = "Pktfwd"

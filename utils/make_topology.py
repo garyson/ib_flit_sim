@@ -2,8 +2,15 @@
 
 from jinja2 import Environment, FileSystemLoader, Template
 import re
+from yaml import safe_load as yaml_safe_load
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 
 '''
+Parse an actual IB topology into the OMNet++/Dimemas equivalents.
+
 A switch description looks like:
 
 Switch	36 "S-0008f10500200134"		# "Voltaire 4036 # v4036" enhanced port 0 lid 1 lmc 0
@@ -16,10 +23,6 @@ A CA description looks like:
 
 Ca	2 "H-001e0bffff4cafc0"		# "telesto HCA-1"
 [1](1e0bffff4cafc1) 	"S-0008f10500200134"[4]		# lid 3 lmc 0 "Voltaire 4036 # v4036" lid 1 4xDDR
-
-Need to parse out the Switch or CA line, and then the list of each port.
-Not all ports are going to be connected; only the ports that are are
-listed.
 
 Internal data structures:
 
@@ -44,7 +47,7 @@ class HCA:
 
     def __init__(self, name):
         """Initializes the HCA."""
-        self.name = name
+        self.name = 'H_' + name
         self.appid = 0
 
     def set_lid(self, lid):
@@ -89,7 +92,7 @@ class Switch:
 
     def set_name(self, name):
         """Set the human-readable name of the switch."""
-        self.name = name
+        self.name = 'SW_' + name
 
     def connect_hca(self, portid, hca, speed):
         """Connect the given HCA at the given port number and speed."""
@@ -126,12 +129,12 @@ class Network:
 
     """
 
-    def __init__(self, name):
+    def __init__(self, config):
         """Initialize the network with the given name."""
         self.hcas = []
         self.switches = []
         self.ranks = []
-        self.name = name
+        self.config = config
 
     def find_hca(self, name):
         """Return the HCA with the given name.
@@ -140,7 +143,7 @@ class Network:
 
         """
         for hca in self.hcas:
-            if hca.name == name:
+            if hca.name == 'H_' + name:
                 return hca
         return None
 
@@ -252,7 +255,7 @@ class Network:
 
     def _output_fdbs(self):
         """Output the filtering database in format for OMNet++ IB model."""
-        with open('{}.fdbs'.format(self.name), 'w') as outh:
+        with open('{}.fdbs'.format(self.config['name']), 'w') as outh:
             for swid, switch in enumerate(self.switches):
                 outh.write('{}:'.format(swid))
                 fdbs = switch.fdbs
@@ -262,10 +265,9 @@ class Network:
 
     def _output_ned(self):
         """Output the OMNet++ NED file."""
-        with open('{}.ned'.format(self.name), 'w') as outh:
-            outh.write('package ib_model.networks;\n')
+        with open('{}.ned'.format(self.config['name']), 'w') as outh:
             outh.write('import ib_model.*;\n')
-            outh.write('network {}\n'.format(self.name))
+            outh.write('network {}\n'.format(self.config['name']))
             outh.write('{\n')
             outh.write('\tsubmodules:\n')
             for hca in self.hcas:
@@ -274,11 +276,8 @@ class Network:
                 switch.output_ned(outh)
             outh.write('\t\tcontroller: Controller {\n')
             outh.write('\t\t\tgates:\n')
-            rankset = set()
-            for rank in self.ranks:
-                rankset.add(rank)
-            outh.write('\t\t\t\tout[{}];\n'.format(len(rankset)))
-            outh.write('\t\t\t\tdone[{}];\n'.format(len(rankset)))
+            outh.write('\t\t\t\tout[{}];\n'.format(len(self.hcas)))
+            outh.write('\t\t\t\tdone[{}];\n'.format(len(self.hcas)))
             outh.write('\t\t}\n')
             outh.write('\tconnections:\n')
             for switch in self.switches:
@@ -286,11 +285,11 @@ class Network:
                     outh.write('\t\t{}.port <--> IB{}Wire <--> {}.port[{}];\n'.format(
                         switch.get_port_remote(portid).name,
                         switch.get_port_speed(portid), switch.name, portid))
-            for rank, hca in enumerate(rankset):
+            for hcaid, hca in enumerate(self.hcas):
                 outh.write('\t\tcontroller.out[{}] --> {}.msgIn[0];\n'.format(
-                    rank, hca.name))
+                    hcaid, hca.name))
                 outh.write('\t\t{}.msgDone --> controller.done[{}];\n'.format(
-                    hca.name, rank))
+                    hca.name, hcaid))
             outh.write('}\n')
 
     def _output_ini(self):
@@ -298,16 +297,19 @@ class Network:
         base_dir = '/home/pmacarth/src/omnetpp-workspace/ib_model/utils'
         env = Environment(loader=FileSystemLoader(base_dir))
         template = env.get_template('omnetpp.ini.j2')
-        with open('{}.ini'.format(self.name), 'w') as outf:
-            outf.write(template.render(name=self.name, switches=self.switches))
+        with open('{}.ini'.format(self.config['name']), 'w') as outf:
+            outf.write(template.render(name=self.config['name'],
+                                       switches=self.switches))
 
     def _output_dimemas_cfg(self):
         """Output the dimemas CFG file."""
         base_dir = '/home/pmacarth/src/omnetpp-workspace/ib_model/utils'
         env = Environment(loader=FileSystemLoader(base_dir))
         template = env.get_template('dimemas.cfg.j2')
-        with open('{}.dimemas.cfg'.format(self.name), 'w') as outf:
-            outf.write(template.render(network=self, processors_per_node=16))
+        with open('{}.dimemas.cfg'.format(self.config['name']), 'w') as outf:
+            outf.write(template.render(network=self,
+                processors_per_node=self.config['processors_per_node'],
+                trace_file_name=self.config['trace_file']))
 
     def output(self):
         """Output all configuration for the OMNet++ IB model."""
@@ -317,10 +319,16 @@ class Network:
         self._output_dimemas_cfg()
 
 
+def read_config(filename):
+    with open(filename, 'r') as inf:
+        return yaml_safe_load(inf)
+
 def main():
-    network = Network.parse_ibnetdiscover_output('test', 'ibnetdiscover.out')
-    network.parse_ranktohost_csv('ranktohost.csv')
-    network.parse_fdbs('ibdiagnet.fdbs')
+    config = read_config('config.yml')
+    network = Network.parse_ibnetdiscover_output(config,
+            config['input']['ibnetdiscover_file'])
+    network.parse_ranktohost_csv(config['input']['ranktohost_file'])
+    network.parse_fdbs(config['input']['fdbs_file'])
     network.output()
 
 if __name__ == '__main__':
