@@ -88,7 +88,7 @@ class Switch:
         """Initialize the switch."""
         self.guid = guid
         self.ports = []
-        self.fdbs = []
+        self.fdb = []
 
     def set_name(self, name):
         """Set the human-readable name of the switch."""
@@ -213,28 +213,27 @@ class Network:
         header_re = re.compile('Switch 0x([0-9A-Fa-f]{16})')
         with open(filename) as inh:
             switch = None
-            fdbs = [255]
+            fdb = [255]
             for line in inh:
                 m = header_re.search(line)
                 if m:
                     if switch is not None:
-                        switch.fdbs = fdbs
-                        fdbs = [255]
+                        switch.fdb = fdb
+                        fdb = [255]
                     switch = self.get_switch_by_guid(m.group(1))
                 elif switch is not None:
                     if line.startswith('LID'):
                         continue
                     elif line.rstrip() == '':
-                        switch.fdbs = fdbs
-                        fdbs = [255]
+                        switch.fdb = fdb
+                        fdb = [255]
                         switch = None
                     else:
                         port = line.split(':')[1].strip()
                         if port == 'UNREACHABLE':
-                            fdbs.append(255)
+                            fdb.append(255)
                         else:
-                            fdbs.append(
-                                    switch.find_port_by_orig_num(int(port)))
+                            fdb.append(switch.find_port_by_orig_num(int(port)))
 
     def parse_ranktohost_csv(self, filename):
         """Parse the list of hosts accessible to MPI."""
@@ -264,8 +263,8 @@ class Network:
         with open('{}.fdbs'.format(self.config['name']), 'w') as outh:
             for swid, switch in enumerate(self.switches):
                 outh.write('{}:'.format(swid))
-                fdbs = switch.fdbs
-                for x in fdbs:
+                fdb = switch.fdb
+                for x in fdb:
                     outh.write(' {}'.format(x))
                 outh.write('\n')
 
