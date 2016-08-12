@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+from copy import copy
 from jinja2 import Environment, FileSystemLoader, Template
 import re
-from yaml import safe_load as yaml_safe_load
+import sys
+import yaml
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
@@ -42,8 +44,10 @@ We need to generate the equivalent NED file.
 '''
 
 
-class HCA:
+class HCA(yaml.YAMLObject):
     """Representation of a single HCA."""
+
+    yaml_tag = '!HCA'
 
     def __init__(self, name):
         """Initializes the HCA."""
@@ -65,8 +69,15 @@ class HCA:
                     "\t\t\t\tappCount = 1;\n\t\t}\n\n")
         outh.write(Template(template).render(name=self.name, lid=self.lid))
 
+    def __repr__(self):
+        return "{}(name={!r}, lid={!r}, guid={!r})".format(
+                self.__class__.__name__, self.name, self.lid, self.guid)
 
-class SwitchPort:
+
+class SwitchPort(yaml.YAMLObject):
+
+    yaml_tag = '!SwitchPort'
+
     def __init__(self, hca, speed, portid):
         """Initialize the port.
 
@@ -80,9 +91,16 @@ class SwitchPort:
         self.speed = speed
         self.orig_port_num = portid
 
+    def __repr__(self):
+        return "{}(remote={!r}, speed={!r}, orig_port_num={!r})".format(
+                self.__class__.__name__, self.remote.name, self.speed,
+                self.orig_port_num)
 
-class Switch:
+
+class Switch(yaml.YAMLObject):
     """Representation of a single switch."""
+
+    yaml_tag = '!Switch'
 
     def __init__(self, guid):
         """Initialize the switch."""
@@ -129,11 +147,11 @@ class Network:
 
     """
 
-    def __init__(self, config):
+    def __init__(self, config, hcas=[], switches=[], ranks=[]):
         """Initialize the network with the given name."""
-        self.hcas = []
-        self.switches = []
-        self.ranks = []
+        self.hcas = hcas
+        self.switches = switches
+        self.ranks = ranks
         self.config = config
 
     def find_hca(self, name):
@@ -193,7 +211,7 @@ class Network:
                 elif cur_hca is not None:
                     m = hcaport_re.match(line.rstrip())
                     if m:
-                        cur_hca.set_lid(m.group(1))
+                        cur_hca.set_lid(int(m.group(1)))
                     cur_hca = None
                 else:
                     m = switch_re.match(line)
@@ -316,25 +334,40 @@ class Network:
                 processors_per_node=self.config['processors_per_node'],
                 trace_file_name=self.config['trace_file']))
 
+    def _output_yaml(self):
+        output = dict()
+        output['config'] = copy(self.config)
+        if 'input' in output['config']:
+            del output['config']['input']
+        output['hcas'] = self.hcas
+        output['ranks'] = self.ranks
+        output['switches'] = self.switches
+        with open('{}.network.yml'.format(self.config['name']), 'w') as outf:
+            outf.write(yaml.dump(output, explicit_start=True))
+
     def output(self):
         """Output all configuration for the OMNet++ IB model."""
         self._output_ned()
         self._output_fdbs()
         self._output_ini()
         self._output_dimemas_cfg()
+        self._output_yaml()
 
-
-def read_config(filename):
-    with open(filename, 'r') as inf:
-        return yaml_safe_load(inf)
 
 def main():
-    config = read_config('config.yml')
-    network = Network.parse_ibnetdiscover_output(config,
-            config['input']['ibnetdiscover_file'])
-    network.parse_ranktohost_csv(config['input']['ranktohost_file'])
-    network.parse_fdbs(config['input']['fdbs_file'])
-    network.output()
+    with open(sys.argv[1]) as inf:
+        dump = yaml.load(inf)
+        config = dump['config']
+        if 'input' in config:
+            network = Network.parse_ibnetdiscover_output(config,
+                    config['input']['ibnetdiscover_file'])
+            network.parse_ranktohost_csv(config['input']['ranktohost_file'])
+            network.parse_fdbs(config['input']['fdbs_file'])
+        else:
+            network = Network(config, hcas=dump['hcas'],
+                              switches=dump['switches'],
+                              ranks=dump['ranks'])
+        network.output()
 
 if __name__ == '__main__':
     main()
