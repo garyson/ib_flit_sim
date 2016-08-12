@@ -166,11 +166,15 @@ class Network:
         return switch
 
     @classmethod
+    def _fixup_name(cls, name):
+        return name.translate(str.maketrans({' ': '_', '#': '_', '-': '_'}))
+
+    @classmethod
     def parse_ibnetdiscover_output(cls, name, filename):
         """Parse the output of ibnetdiscover into a Network object."""
-        switch_re = re.compile(r'^Switch\s+(\d+)\s+"S-([0-9a-fA-F]{16})"\s+#\s+"([^#]*#\s+)?([^"]+)"')
-        hca_re = re.compile(r'^Ca\s+(\d+)\s+"H-([0-9a-fA-F]{16})"\s+#\s+"(\w+) HCA')
-        swport_re = re.compile(r'^\[(\d+)\]\s+"H-[0-9a-fA-F]{16}"\[\d+\]\([0-9a-fA-F]{1,16}\)\s+#\s+"(\w+)\s+HCA-\d+"\s+lid\s+\d+\s+(\d+x[A-Z]{3})$')
+        switch_re = re.compile(r'^Switch\s+(\d+)\s+"S-([0-9a-fA-F]{16})"\s+#\s+"([^"]+)"')
+        hca_re = re.compile(r'^Ca\s+(\d+)\s+"H-([0-9a-fA-F]{16})"\s+#\s+"([^"]+)"')
+        swport_re = re.compile(r'^\[(\d+)\]\s+"H-[0-9a-fA-F]{16}"\[\d+\]\([0-9a-fA-F]{1,16}\)\s+#\s+"([^"]+)"\s+lid\s+\d+\s+(\d+x[A-Z]{3})$')
         hcaport_re = re.compile(r'^\[\d+\]\([0-9a-fA-F]{1,16}\)\s+"S-[0-9a-fA-F]{16}"\[\d+\]\s+#\s+lid\s+(\d+)')
 
         res = Network(name)
@@ -181,7 +185,7 @@ class Network:
                 if cur_switch is not None:
                     m = swport_re.match(line.rstrip())
                     if m:
-                        port_hca = res.get_hca(m.group(2))
+                        port_hca = res.get_hca(cls._fixup_name(m.group(2)))
                         cur_switch.connect_hca(int(m.group(1)), port_hca,
                                                m.group(3).upper())
                     else:
@@ -196,11 +200,11 @@ class Network:
                     if m:
                         # Parse switch description
                         cur_switch = res.get_switch_by_guid(m.group(2))
-                        cur_switch.set_name(m.group(4))
+                        cur_switch.set_name(cls._fixup_name(m.group(3)))
                     m = hca_re.match(line)
                     if m:
                         # Parse HCA description
-                        cur_hca = res.get_hca(m.group(3))
+                        cur_hca = res.get_hca(cls._fixup_name(m.group(3)))
                         cur_hca.set_guid(m.group(2))
         return res
 
@@ -239,7 +243,9 @@ class Network:
             inh.readline()
             line = inh.readline()
             while line:
-                hca = self.get_hca(line.rstrip().split(',')[1])
+                hca = self.find_hca(line.rstrip().split(',')[1])
+                if hca is None:
+                    raise ValueError('hca ' + hca + ' not found')
                 self.ranks.append(hca)
                 line = inh.readline()
         return self.ranks
