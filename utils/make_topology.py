@@ -185,7 +185,8 @@ class Network:
 
     @classmethod
     def _fixup_name(cls, name):
-        return name.translate(str.maketrans({' ': '_', '#': '_', '-': '_'}))
+        return name.translate(str.maketrans({' ': '_', '#': '_',
+            '-': '_', ';': '_', '/': '_', ':': '_'}))
 
     @classmethod
     def parse_ibnetdiscover_output(cls, name, filename):
