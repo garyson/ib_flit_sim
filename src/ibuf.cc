@@ -348,7 +348,7 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
 
     // Now consume a credit
     staticFree[curPacketVL]--;
-    staticUsageHist[curPacketVL].collect(staticFree[curPacketVL]);
+    staticUsageHist[curPacketVL].collect(maxStatic[curPacketVL] - staticFree[curPacketVL]);
     ABR[curPacketVL]++;
     EV << "-I- " << getFullPath() << " New Static ABR["
        << curPacketVL << "]:" << ABR[curPacketVL] << endl;
