@@ -52,7 +52,6 @@ class HCA(yaml.YAMLObject):
     def __init__(self, name):
         """Initializes the HCA."""
         self.name = 'H_' + name
-        self.appid = 0
 
     def set_lid(self, lid):
         """Set the LID of this HCA port to the given value."""
@@ -204,6 +203,7 @@ class Network:
                 if cur_switch is not None:
                     m = swport_re.match(line.rstrip())
                     if m:
+                        hcaname = cls._fixup_name(m.group(2))
                         port_hca = res.get_hca(cls._fixup_name(m.group(2)))
                         cur_switch.connect_hca(int(m.group(1)), port_hca,
                                                m.group(3).upper())
@@ -266,7 +266,6 @@ class Network:
                     raise ValueError('hca ' + hca + ' not found')
                 self.ranks.append(hca)
                 line = inh.readline()
-        return self.ranks
 
     def _output_sddf_rank_array(self):
         res = ""
