@@ -216,7 +216,7 @@ IBAppMsg *IBApp::getNewMsg()
       msgDstLid = in_msg->getDstLid();
       switch (in_msg->getKind()) {
       case IB_DIM_SEND_MSG:
-          msgLen_B = in_msg->getLenBytes();
+          msgLen_B = in_msg->getLenBytes() + 64;
           break;
       default:
           msgLen_B = controlMessageSize;
