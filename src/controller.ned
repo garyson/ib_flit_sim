@@ -25,6 +25,7 @@ simple Controller
   string socketListenHost = "127.0.0.1"; // host to listen on
   string socketListenPort = "10000"; // port to listen on
   double dimemasTimescale @unit(s);
+  double perMsgDelay @unit(ns);
   @display("i=block/telnet");
  gates:
   output out[];

@@ -164,7 +164,7 @@ class Controller : public cSimpleModule
   bool handleDimemasRReq(std::string args);
   bool handleDimemasRTR(std::string args);
 
-  void sendMessage(DimReqMsg *req);
+  void sendMessage(DimReqMsg *req, bool doDelay = false);
 
   // Initialize a new set of parameters for a new message
   DimReqMsg *makeMessage(double timestamp, IB_MSGS msgType,

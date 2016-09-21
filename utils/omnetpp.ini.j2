@@ -25,6 +25,8 @@ include /home/pmacarth/src/omnetpp-workspace/ib_model/networks/pcie_8x_g3.ini
 **.speed = 14Gbps
 **.maxVL = 0 # note that maxvl is the max value of the VL not num
 
+**.perMsgDelay = 1800ns
+
 ##################################################################
 # SINK
 ##################################################################
@@ -100,7 +102,7 @@ include /home/pmacarth/src/omnetpp-workspace/ib_model/networks/pcie_8x_g3.ini
 # not relevant for param mode but still required
 **.msgLenSet = "1152 2048 4096"
 **.msgLenProb = "1 1 1 1"
-**.msg2msgGap = 400ns
+**app[*].msg2msgGap = 50ns
 **.initialDelay = 0ns
 
 # Others:

@@ -181,7 +181,7 @@ bool Controller::handleDimemasRReq(std::string args)
     // generate a new message
     auto p_msg = makeMessage(timestamp, IB_DIM_RREQ_MSG, srcNode, dstNode,
                              msgSize, args);
-    sendMessage(p_msg);
+    sendMessage(p_msg, true);
 
     return true;
 }
@@ -250,7 +250,7 @@ bool Controller::handleDimemasSend(std::string args)
     ++eagerCount;
     auto p_msg = makeMessage(timestamp, IB_DIM_SEND_MSG, srcNode, dstNode,
                              msgSize, args);
-    sendMessage(p_msg);
+    sendMessage(p_msg, true);
 
     return true;
 }
@@ -265,12 +265,13 @@ void Controller::enqueueRTR(DimReqMsg *req)
 }
 
 /** Sends a message to the application object indicated by the source rank. */
-void Controller::sendMessage(DimReqMsg *p_msg)
+void Controller::sendMessage(DimReqMsg *p_msg, bool doDelay)
 {
-    simtime_t delay = p_msg->getInject_time();
+    double delay = doDelay ? par("perMsgDelay") : 0;
+    simtime_t send_time = p_msg->getInject_time() + delay * 1e-9;
     simtime_t cur = simTime();
-    if (delay >= cur) {
-        sendDelayed(p_msg, delay - cur, "out", p_msg->getSrcNode());
+    if (send_time >= cur) {
+        sendDelayed(p_msg, send_time - cur, "out", p_msg->getSrcNode());
     } else {
         /* Due to rounding error, the delay for this message would be negative.
          *   Send immediately to avoid OMNet++ errors. */
