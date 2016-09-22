@@ -79,11 +79,11 @@ void IBInBuf::initialize()
     EV << "-I- " << getFullPath() << " is Switch IBuf " << getId() <<  endl;
     Switch = getParentModule()->getParentModule();
     if (Switch == NULL) {
-      opp_error("Could not find parent Switch module");
+      throw cRuntimeError("Could not find parent Switch module");
     }
     pktfwd = dynamic_cast<Pktfwd*>(simulation.getModule(Switch->findSubmodule("pktfwd")));
     if (pktfwd == NULL) {
-      opp_error("Could not find Packet FWDer");
+      throw cRuntimeError("Could not find Packet FWDer");
     }
     ISWDelay = Switch->par("ISWDelay");
   }
@@ -105,7 +105,7 @@ void IBInBuf::initialize()
   }
 
   if (totStatic > totalBufferSize) {
-    opp_error("-E- can not define total static (%d) > (%d) total buffer size",
+    throw cRuntimeError("-E- can not define total static (%d) > (%d) total buffer size",
               totStatic, totalBufferSize);
   }
 
@@ -189,7 +189,7 @@ void IBInBuf::updateVLAHoQ(short int portNum, short vl)
     int remotePortNum = p_gate->getIndex();
     IBVLArb *p_vla = dynamic_cast<IBVLArb *>(p_gate->getOwnerModule());
     if ((p_vla == NULL) || strcmp(p_vla->getName(), "vlarb")) {
-      opp_error("-E- fail to get VLA from out port: %d", portNum);
+      throw cRuntimeError("-E- fail to get VLA from out port: %d", portNum);
     }
     if (! p_vla->isHoQFree(remotePortNum, vl))
       return;
@@ -270,17 +270,17 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
       unsigned short dLid = p_dataMsg->getDstLid();
 
       if (dLid == 0) {
-        opp_error("Error: dLid should not be 0 for %s", p_dataMsg->getName());
+        throw cRuntimeError("Error: dLid should not be 0 for %s", p_dataMsg->getName());
       }
 
       if ((curPacketVL < 0) || (curPacketVL > (int)maxVL+1)) {
-        opp_error("VL out of range: %d", curPacketVL);
+        throw cRuntimeError("VL out of range: %d", curPacketVL);
       }
 
       // do we have enough credits?
       if (!lossyMode) {
         if (curPacketCredits > staticFree[curPacketVL]) {
-          opp_error(" Credits overflow. Required: %d available: %d",
+          throw cRuntimeError(" Credits overflow. Required: %d available: %d",
                     curPacketCredits, staticFree[curPacketVL]);
         }
       } else {
@@ -299,7 +299,7 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
            curPacketOutPort = pktfwd->getPortByLID(dLid);
            if (!p_dataMsg->getBeforeAnySwitch() &&
                (curPacketOutPort == (int)thisPortNum)) {
-             opp_error("loopback ! packet %s from lid:%d to dlid %d is sent back throgh port: %d ",
+             throw cRuntimeError("loopback ! packet %s from lid:%d to dlid %d is sent back throgh port: %d ",
                        p_dataMsg->getName(),
                        p_dataMsg->getSrcLid(),
                        p_dataMsg->getDstLid(),
@@ -326,7 +326,7 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
       // check the packet is the expected one:
       if ((curPacketId != p_dataMsg->getPacketId()) ||
           (curPacketSrcLid != p_dataMsg->getSrcLid())) {
-        opp_error("got unexpected packet: %s from:%d id: %d "
+        throw cRuntimeError("got unexpected packet: %s from:%d id: %d "
                   "during packet: %s from: %d %d",
                   p_dataMsg->getName(),
                   p_dataMsg->getSrcLid(), p_dataMsg->getPacketId(),
@@ -384,7 +384,7 @@ void IBInBuf::simpleCredFree(int vl)
     // need to update the OBUF we have one free...
     sendRxCred(vl);
   } else {
-    opp_error("Error: got a credit leak? trying to add credits to full buffer on vl  %d", vl);
+    throw cRuntimeError("Error: got a credit leak? trying to add credits to full buffer on vl  %d", vl);
   }
 }
 

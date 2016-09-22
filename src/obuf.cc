@@ -124,7 +124,7 @@ IBOutBuf::qMessage(IBDataMsg *p_msg) {
 
   if ( p_popMsg->isScheduled() ) {
     if ( qSize <= queue.length() ) {
-      opp_error("-E- %s  need to insert into a full Q. qSize:%d qLength:%d",
+      throw cRuntimeError("-E- %s  need to insert into a full Q. qSize:%d qLength:%d",
                 getFullPath().c_str(), qSize, queue.length());
     }
 

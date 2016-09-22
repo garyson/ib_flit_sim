@@ -157,7 +157,7 @@ void IBSink::handleData(IBDataMsg *p_msg)
 
   // make sure was correctly received (no routing bug)
   if (p_msg->getDstLid() != (int)lid) {
-    opp_error("-E- Received packet to %d while self lid is %d",
+    throw cRuntimeError("-E- Received packet to %d while self lid is %d",
               p_msg->getDstLid() , lid);
   }
 
@@ -196,11 +196,11 @@ void IBSink::handleData(IBDataMsg *p_msg)
         oooWindow.collect(srcPktSn-curSn);
       } else if (srcPktSn == curSn) {
         // this is a BUG!
-        opp_error("-E- Received packet to %d from %d with PacketSn %d equal to previous Sn",
+        throw cRuntimeError("-E- Received packet to %d from %d with PacketSn %d equal to previous Sn",
             p_msg->getDstLid() , srcLid, srcPktSn);
       } else {
         // Could not get here - A bug
-        opp_error("BUG: IBSink::handleData unexpected relation of curSn %d and PacketSn %d",
+        throw cRuntimeError("BUG: IBSink::handleData unexpected relation of curSn %d and PacketSn %d",
             curSn, srcPktSn);
       }
     } else {
@@ -236,7 +236,7 @@ void IBSink::handleData(IBDataMsg *p_msg)
     MsgTupple mt(p_msg->getSrcLid(), p_msg->getAppIdx(), p_msg->getMsgIdx());
     mI = outstandingMsgsData.find(mt);
     if (mI == outstandingMsgsData.end()) {
-      opp_error("-E- Received last flit of packet from %d with no corresponding message record", p_msg->getSrcLid());
+      throw cRuntimeError("-E- Received last flit of packet from %d with no corresponding message record", p_msg->getSrcLid());
     }
     (*mI).second.numPktsReceived++;
     EV << "-I- " << getFullPath() << " received last flit of packet: " << (*mI).second.numPktsReceived << " from src: "
@@ -353,7 +353,7 @@ void IBSink::handleMessage(cMessage *p_msg)
   } else if ( kind == IB_DONE_MSG ) {
     delete p_msg;
   } else {
-    opp_error("-E- %s does not know what to with msg: %d is local: %d"
+    throw cRuntimeError("-E- %s does not know what to with msg: %d is local: %d"
               " senderModule: %s",
               getFullPath().c_str(),
               p_msg->getKind(),

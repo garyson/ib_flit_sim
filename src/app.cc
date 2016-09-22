@@ -85,7 +85,7 @@ void IBApp::initialize(){
     vecFiles   *vecMgr = vecFiles::get();
     dstSeq = vecMgr->getIntVec(dstSeqVecFile, dstSeqVecIdx);
     if (dstSeq == NULL) {
-            opp_error("fail to obtain dstSeq vector: %s/%d",
+            throw cRuntimeError("fail to obtain dstSeq vector: %s/%d",
                                dstSeqVecFile, dstSeqVecIdx);
     }
     EV << "-I- Defined DST sequence of " << dstSeq->size() << " LIDs" << endl;
@@ -98,7 +98,7 @@ void IBApp::initialize(){
   } else if (!strcmp(msgLenModePar,"set")) {
     msgLenMode = MSG_LEN_SET;
   } else {
-    opp_error("unknown msgLenMode: %s", msgLenMode);
+    throw cRuntimeError("unknown msgLenMode: %s", msgLenMode);
   }
 
   // need to init the set...

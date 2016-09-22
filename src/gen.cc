@@ -152,7 +152,7 @@ bool IBGenerator::arbitrateApps()
            << a << endl;
         if (curApp != a && appMsgs[curApp]
 			&& appMsgs[curApp]->getFlitIdx() != 0) {
-		opp_error("Arbitrate switched apps with packet in progress\n");
+		throw cRuntimeError("Arbitrate switched apps with packet in progress\n");
 	}
         curApp = a;
         found = true;

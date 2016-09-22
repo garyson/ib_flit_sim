@@ -411,7 +411,7 @@ void Controller::handleMessage(cMessage *p_msg){
       auto done_msg = (DimDoneMsg *)p_msg;
       auto orig_msg = std::move(this->lookupMessage(done_msg->getMsgId()));
       if (!orig_msg) {
-          opp_error("Got completion for unknown message %s\n", done_msg->getName());
+          throw cRuntimeError("Got completion for unknown message %s\n", done_msg->getName());
       }
 
       switch (orig_msg->getKind()) {

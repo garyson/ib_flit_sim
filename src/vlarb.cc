@@ -41,19 +41,19 @@ void IBVLArb::setVLArbParams(const char *cfgStr, ArbTableEntry *tbl)
   while (p_vl && (idx < 8)) {
     int vl = atoi(p_vl);
     if (vl > 8) {
-      opp_error("-E- %s VL: %d > 8 in VLA: %s ",
+      throw cRuntimeError("-E- %s VL: %d > 8 in VLA: %s ",
                 getFullPath().c_str(), vl, cfgStr);
     }
 
     int weight;
     p_weight = strtok(NULL, ", ");
     if (! p_weight) {
-      opp_error("-E- %s badly formatted VLA: %s",
+      throw cRuntimeError("-E- %s badly formatted VLA: %s",
                 getFullPath().c_str(), cfgStr);
     }
     weight = atoi(p_weight);
     if (weight > 255) {
-      opp_error("-E- %s weight: %d > 255 in VLA: %s",
+      throw cRuntimeError("-E- %s weight: %d > 255 in VLA: %s",
                 getFullPath().c_str(), weight, cfgStr);
     }
 
@@ -163,7 +163,7 @@ int IBVLArb::getOBufFCTBS(unsigned int vl)
   cGate *p_gate = gate("out")->getPathEndGate();
   IBOutBuf *p_oBuf = dynamic_cast<IBOutBuf *>(p_gate->getOwnerModule());
   if ((p_oBuf == NULL) || strcmp(p_oBuf->getName(), "obuf")) {
-    opp_error("-E- %s fail to get OBUF from out port", getFullPath().c_str());
+    throw cRuntimeError("-E- %s fail to get OBUF from out port", getFullPath().c_str());
   }
   return(p_oBuf->getFCTBS(vl));
 }
@@ -172,12 +172,12 @@ int IBVLArb::getOBufFCTBS(unsigned int vl)
 int IBVLArb::isHoQFree(unsigned int pn, unsigned int vl)
 {
   if ((pn < 0) || (pn >= numInPorts) ) {
-    opp_error("-E- %s got out of range port num: %d",
+    throw cRuntimeError("-E- %s got out of range port num: %d",
               getFullPath().c_str(), pn);
   }
 
   if ( (vl < 0) || (vl >= maxVL+1)) {
-    opp_error("-E- %s got out of range vl: %d", getFullPath().c_str(), vl);
+    throw cRuntimeError("-E- %s got out of range vl: %d", getFullPath().c_str(), vl);
   }
 
   // since there might be races between simultanous requests
@@ -201,7 +201,7 @@ void IBVLArb::sendOutMessage(IBDataMsg *p_msg)
   if ( ! p_popMsg->isScheduled() ) {
     scheduleAt(simTime() + delay, p_popMsg);
   } else {
-    opp_error("-E- %s How can we have two messgaes leaving at the same time",
+    throw cRuntimeError("-E- %s How can we have two messgaes leaving at the same time",
               getFullPath().c_str());
     return;
   }
@@ -252,7 +252,7 @@ int IBVLArb::isValidArbitration(unsigned int portNum, unsigned int vl,
   cGate *p_gate = gate("out")->getPathEndGate();
   IBOutBuf *p_oBuf = dynamic_cast<IBOutBuf *>(p_gate->getOwnerModule());
   if ((p_oBuf == NULL) || strcmp(p_oBuf->getName(), "obuf")) {
-    opp_error("-E- %s fail to get OBUF from out port", getFullPath().c_str());
+    throw cRuntimeError("-E- %s fail to get OBUF from out port", getFullPath().c_str());
   }
 
   // check the entire packet an fit in
@@ -270,7 +270,7 @@ int IBVLArb::isValidArbitration(unsigned int portNum, unsigned int vl,
     cGate *p_remOutPort = gate("in", portNum)->getPathStartGate();
     IBInBuf *p_inBuf = dynamic_cast<IBInBuf *>(p_remOutPort->getOwnerModule());
     if ((p_inBuf == NULL) || strcmp(p_inBuf->getName(), "ibuf") ) {
-      opp_error("-E- %s fail to get InBuf from in port: %d",
+      throw cRuntimeError("-E- %s fail to get InBuf from in port: %d",
                 getFullPath().c_str(), portNum);
     }
 
@@ -739,22 +739,22 @@ void IBVLArb::handlePush(IBDataMsg *p_msg)
   unsigned int pn = p_msg->getArrivalGate()->getIndex();
   unsigned short int vl = p_msg->getVL();
   if ((pn < 0) || (pn >= numInPorts) ) {
-    opp_error("-E- %s got out of range port num: %d",
+    throw cRuntimeError("-E- %s got out of range port num: %d",
               getFullPath().c_str(), pn);
   }
 
   if (vl >= maxVL+1) {
-    opp_error("-E- %s VLA got out of range vl: %d by %s, arrived at port %d",
+    throw cRuntimeError("-E- %s VLA got out of range vl: %d by %s, arrived at port %d",
               getFullPath().c_str(), vl, p_msg->getName(), pn);
   }
 
   if (inPktHoqPerVL[pn][vl] != NULL) {
-    opp_error("-E- %s Overwriting HoQ port: %d by %s arrived at port: %d",
+    throw cRuntimeError("-E- %s Overwriting HoQ port: %d by %s arrived at port: %d",
               getFullPath().c_str(), pn, p_msg->getName(), pn);
   }
 
   if (hoqFreeProvided[pn][vl] == 0) {
-    opp_error("-E- %s No previous HoQ free port: %d VL: %d by %s at port: %d",
+    throw cRuntimeError("-E- %s No previous HoQ free port: %d VL: %d by %s at port: %d",
               getFullPath().c_str(), pn, vl, p_msg->getName(), pn);
   }
 
@@ -805,7 +805,7 @@ void IBVLArb::handleMessage(cMessage *p_msg)
     delete p_msg;
     arbitrate();
   } else {
-    opp_error("-E- %s does not know how to handle message: %d",
+    throw cRuntimeError("-E- %s does not know how to handle message: %d",
               getFullPath().c_str(), msgType);
     delete p_msg;
   }

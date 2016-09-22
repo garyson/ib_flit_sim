@@ -27,7 +27,7 @@ void Pktfwd::initialize() {
 
 	Switch = getParentModule();
 	if (!Switch) {
-		opp_error("-E- Failed to obtain an parent Switch module");
+		throw cRuntimeError("-E- Failed to obtain an parent Switch module");
 	}
 	numPorts = Switch->par("numSwitchPorts");
 
@@ -37,7 +37,7 @@ void Pktfwd::initialize() {
 	vecFiles *vecMgr = vecFiles::get();
 	FDB = vecMgr->getIntVec(fdbsFile, fdbIdx);
 	if (FDB == NULL) {
-		opp_error("-E- Failed to obtain an FDB %s, %d", fdbsFile, fdbIdx);
+		throw cRuntimeError("-E- Failed to obtain an FDB %s, %d", fdbsFile, fdbIdx);
 	} else {
 		EV<< "-I- " << getFullPath() << " Obtained FDB of size:"
 		<< FDB->size() << endl;
@@ -49,7 +49,7 @@ int Pktfwd::getPortByLID(unsigned int lid) {
 	Enter_Method("getPortByLID LID: %d", lid);
 	unsigned int outPort; // the resulting output port
 	if (lid >= FDB->size()) {
-		opp_error("-E- getPortByLID: LID %d is out of available FDB range %d",
+		throw cRuntimeError("-E- getPortByLID: LID %d is out of available FDB range %d",
 				lid, FDB->size() - 1);
 	}
 
