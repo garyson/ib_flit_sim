@@ -146,7 +146,7 @@ void IBApp::initialize(){
 // get random msg len by the histogram
 unsigned int IBApp::getMsgLenByDistribution()
 {
- double r = msgLenProb.random();
+ double r = msgLenProb.draw();
  return int(r);
 }
 
