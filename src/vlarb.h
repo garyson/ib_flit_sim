@@ -85,7 +85,6 @@ class IBVLArb: public omnetpp::cSimpleModule
   ArbTableEntry HighTbl[8]; // The High Priority Arbitration Table
   ArbTableEntry LowTbl[8];  // The Low Priority Arbitration Table
   int           hcaArb;     // If 1 means the arbiter is an HCA arbiter
-  int recordVectors;        // Control recording of vectors
   unsigned int maxVL;       // Maximum value of VL
   int VSWDelay;             // Delay brought by VLArb in Switch [ns] (SW par)
   bool useFCFSRQArb;        // Arbitrate RQs on same VL by First Come First Serve

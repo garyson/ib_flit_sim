@@ -79,7 +79,6 @@ class IBOutBuf : public omnetpp::cSimpleModule
   int curFlowCtrVL;    // The VL to sent FC on. If == 8 loop back to 0
   bool Enabled;        // Is this port enabled or is it part of a 8x/12x
   omnetpp::cQueue queue;// holds the outstanding data
-  int numDataCreditsQueued; // needed to make sure we do not overflow the qSize
   unsigned int pendingFreeCount; // number of credits to hand back to VLArb
   IBPopType prevPop;        // last pop type (know when "free" msg)
   omnetpp::simtime_t prevFCTime;     // track the last time the VL0 flow control sent
