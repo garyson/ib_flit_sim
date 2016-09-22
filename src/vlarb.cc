@@ -93,7 +93,7 @@ void IBVLArb::initialize()
   // The internal bus from in-buf to out-bus is assumed to
   // be clocking every coreFreq cycle and with width of busWidth
   popDelayPerByte_s =  1.0 / busWidth_B / coreFreq_hz;
-  ev << "-I- " << getFullPath() << " popDelayPerByte = " << 1e9*popDelayPerByte_s << " [nsec] " << endl;
+  EV << "-I- " << getFullPath() << " popDelayPerByte = " << 1e9*popDelayPerByte_s << " [nsec] " << endl;
   WATCH(popDelayPerByte_s);
 
   // Initiazlize the statistical collection elements
@@ -484,37 +484,37 @@ IBVLArb::findNextSendOnVL0( unsigned int &curPortNum )
 void IBVLArb::displayState()
 {
   // print the state of the arbiter
-  if (!ev.isDisabled()) {
-    ev << "-I- " << getFullPath() << " ARBITER STATE as VL/Used/Weight"
+  if (cLog::logLevel < LOGLEVEL_INFO) {
+    EV << "-I- " << getFullPath() << " ARBITER STATE as VL/Used/Weight"
        << endl;
-    ev << "-I- High:";
+    EV << "-I- High:";
     for (unsigned int e = 0; e < maxVL+1; e++) {
       if (LastSentWasHigh && HighIndex == e)
-        ev << "*" << HighTbl[e].VL << " "
+        EV << "*" << HighTbl[e].VL << " "
            << setw(3) << HighTbl[e].used
            << "/" << setw(3) << HighTbl[e].weight << "*";
       else
-        ev << "|" << HighTbl[e].VL << " "
+        EV << "|" << HighTbl[e].VL << " "
            << setw(3) << HighTbl[e].used
            << "/" << setw(3) << HighTbl[e].weight << " ";
     }
     if (LastSentWasHigh)
-      ev << "<----" << SentHighCounter << endl;
+      EV << "<----" << SentHighCounter << endl;
     else
-      ev << endl;
+      EV << endl;
 
-    ev << "-I- Low: ";
+    EV << "-I- Low: ";
     for (unsigned int e = 0; e < maxVL+1; e++) {
       if (!LastSentWasHigh && LowIndex == e)
-        ev << "*" << LowTbl[e].VL << " "
+        EV << "*" << LowTbl[e].VL << " "
            << setw(3) << LowTbl[e].used
            << "/" << setw(3) << LowTbl[e].weight << "*";
       else
-        ev << "|" << LowTbl[e].VL << " "
+        EV << "|" << LowTbl[e].VL << " "
            << setw(3) << LowTbl[e].used
            << "/" << setw(3) << LowTbl[e].weight << " ";
     }
-    ev << endl;
+    EV << endl;
   }
 
   int vlsWithData = 0;

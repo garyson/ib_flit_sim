@@ -72,7 +72,7 @@ void IBOutBuf::initialize()
     // when we get first packets
     scheduleAt(simTime() , p_popMsg);
   } else {
-    ev << "-I- " << getFullPath() << " port DISABLED " << endl;
+    EV << "-I- " << getFullPath() << " port DISABLED " << endl;
   }
 } // initialize
 

@@ -391,7 +391,7 @@ void IBGenerator::handleMessage(cMessage *p_msg) {
 void IBGenerator::finish()
 {
   double oBW = totalBytesSent / (simTime() - firstPktSendTime);
-  ev << "STAT: " << getFullPath() << " Gen Output BW (B/s):" << oBW  << endl;
+  EV << "STAT: " << getFullPath() << " Gen Output BW (B/s):" << oBW  << endl;
 }
 
 IBGenerator::~IBGenerator() {

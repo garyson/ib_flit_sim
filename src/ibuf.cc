@@ -243,10 +243,10 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
 
     // update ABR and send RxCred
     if (ABR[vl] > p_flowMsg->getFCTBS()) {
-      ev << "-E- " << getFullPath() << " how come we have ABR:" << ABR[vl]
+      EV << "-E- " << getFullPath() << " how come we have ABR:" << ABR[vl]
          << " > wire FCTBS" << p_flowMsg->getFCTBS() << "?" << endl;
     } else if (ABR[vl] < p_flowMsg->getFCTBS()) {
-      ev << "-W- " << getFullPath() << " how come we have ABR:" << ABR[vl]
+      EV << "-W- " << getFullPath() << " how come we have ABR:" << ABR[vl]
          << " < wire FCTBS" << p_flowMsg->getFCTBS()
          << " in lossles wires?" << endl;
       ABR[vl] = p_flowMsg->getFCTBS();
@@ -340,7 +340,7 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
 
     // check out port is valid
     if ((curPacketOutPort < 0) ||  (curPacketOutPort >= (int)numPorts) ) {
-      ev << "-E- " << getFullPath() << " dropping packet:"
+      EV << "-E- " << getFullPath() << " dropping packet:"
          << p_dataMsg->getName() << " by FDB mapping to port:" << curPacketOutPort << endl;
       cancelAndDelete(p_dataMsg);
       return;
@@ -369,7 +369,7 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
     //   all output ports, Note this also dequeue and send
     updateVLAHoQ(curPacketOutPort, curPacketVL);
   } else {
-    ev << "-E- " << getFullPath() << " push does not know how to handle message:"
+    EV << "-E- " << getFullPath() << " push does not know how to handle message:"
        << msgType << endl;
     cancelAndDelete(p_msg);
   }
@@ -416,9 +416,9 @@ void IBInBuf::handleSent(IBSentMsg *p_msg)
     if (p_msg->getWasLast()) {
       // first we decrement the number of outstanding sends
       if (numBeingSent <= 0) {
-        ev << "-E- " << getFullPath() << " got last message when numBeingSent:"
+        EV << "-E- " << getFullPath() << " got last message when numBeingSent:"
            << numBeingSent << endl;
-        ev.flush();
+        EV.flush();
         exit(1);
       }
 
@@ -451,7 +451,7 @@ void IBInBuf::handleMessage(cMessage *p_msg)
     } else if ( (msgType == IB_DATA_MSG) || (msgType == IB_FLOWCTRL_MSG) ) {
         handlePush((IBWireMsg*)p_msg);
     } else {
-        ev << "-E- " << getFullPath() << " does not know how to handle message:" << msgType << endl;
+        EV << "-E- " << getFullPath() << " does not know how to handle message:" << msgType << endl;
         if (p_msg->isSelfMessage())
             cancelAndDelete(p_msg);
         else
@@ -462,8 +462,8 @@ void IBInBuf::handleMessage(cMessage *p_msg)
 void IBInBuf::finish()
 {
   for (unsigned int vl = 0; vl < maxVL+1; vl++ ) {
-       ev << "STAT: " << getFullPath() << " VL:" << vl;
-       ev << " Used Static Credits num/avg/max/std:"
+       EV << "STAT: " << getFullPath() << " VL:" << vl;
+       EV << " Used Static Credits num/avg/max/std:"
              << staticUsageHist[vl].getCount()
              << " / " << staticUsageHist[vl].getMean()
              << " / " << staticUsageHist[vl].getMax()
