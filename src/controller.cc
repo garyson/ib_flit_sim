@@ -397,7 +397,7 @@ void Controller::handleMessage(cMessage *p_msg){
           return;
       }
       std::string dimResponse{"STOP REACHED "};
-      dimResponse.append(std::to_string(simTime().inUnit(-9)));
+      dimResponse.append(std::to_string(simTime().inUnit(SIMTIME_NS)));
       EV << "-I- " << getFullPath() << " Send to Dimemas: "
          << dimResponse << '\n';
       sock->sendLine(dimResponse + "\n");
