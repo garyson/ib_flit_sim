@@ -172,12 +172,12 @@ int IBVLArb::getOBufFCTBS(unsigned int vl)
 // return 1 if the HoQ for that port/VL is free
 int IBVLArb::isHoQFree(unsigned int pn, unsigned int vl)
 {
-  if ((pn < 0) || (pn >= numInPorts) ) {
+  if (pn >= numInPorts) {
     throw cRuntimeError("-E- %s got out of range port num: %d",
               getFullPath().c_str(), pn);
   }
 
-  if ( (vl < 0) || (vl >= maxVL+1)) {
+  if (vl >= maxVL+1) {
     throw cRuntimeError("-E- %s got out of range vl: %d", getFullPath().c_str(), vl);
   }
 
@@ -739,7 +739,7 @@ void IBVLArb::handlePush(IBDataMsg *p_msg)
   // what port did we get it from ?
   unsigned int pn = p_msg->getArrivalGate()->getIndex();
   unsigned short int vl = p_msg->getVL();
-  if ((pn < 0) || (pn >= numInPorts) ) {
+  if (pn >= numInPorts) {
     throw cRuntimeError("-E- %s got out of range port num: %d",
               getFullPath().c_str(), pn);
   }
