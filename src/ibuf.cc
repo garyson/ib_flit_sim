@@ -82,7 +82,7 @@ void IBInBuf::initialize()
     if (Switch == NULL) {
       throw cRuntimeError("Could not find parent Switch module");
     }
-    pktfwd = dynamic_cast<Pktfwd*>(simulation.getModule(Switch->findSubmodule("pktfwd")));
+    pktfwd = dynamic_cast<Pktfwd*>(getSimulation()->getModule(Switch->findSubmodule("pktfwd")));
     if (pktfwd == NULL) {
       throw cRuntimeError("Could not find Packet FWDer");
     }
