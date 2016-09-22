@@ -92,11 +92,11 @@
 //
 // Input Buffer for Receiving IB FLITs and VL credit updates
 //
-class IBInBuf : public cSimpleModule
+class IBInBuf : public omnetpp::cSimpleModule
 {
  private:
-  cMessage *p_popMsg;
-  cMessage *p_minTimeMsg;
+  omnetpp::cMessage *p_popMsg;
+  omnetpp::cMessage *p_minTimeMsg;
 
   // parameters:
   int ISWDelay ; // delay in ns contributed by SW in IBUF
@@ -111,7 +111,7 @@ class IBInBuf : public cSimpleModule
 
   // data strcture
   int numBeingSent;   // Number of packets being currently sent
-  cQueue **Q;         // Incoming packets Q per VL per out port
+  omnetpp::cQueue **Q;// Incoming packets Q per VL per out port
   int hoqOutPort[8];  // The output port the packet at the HOQ is targetted to
   std::vector<unsigned int> staticFree;  // number of free credits per VL
   std::vector<long> ABR;    // total number of received credits per VL
@@ -126,19 +126,19 @@ class IBInBuf : public cSimpleModule
   unsigned int curPacketCredits;
   int curPacketVL;
   int curPacketOutPort;
-  simtime_t lastSendTime;
+  omnetpp::simtime_t lastSendTime;
 
   // pointer the container switch
-  cModule* Switch;
+  omnetpp::cModule* Switch;
   Pktfwd* pktfwd;
 
   // statistics
-  cLongHistogram staticUsageHist[8];
-  cOutVector usedStaticCredits;
-  cOutVector CredChosenPort;
-  cOutVector dsLidDR;
-  cOutVector outPortDR;
-  cOutVector pktidDR;
+  omnetpp::cLongHistogram staticUsageHist[8];
+  omnetpp::cOutVector usedStaticCredits;
+  omnetpp::cOutVector CredChosenPort;
+  omnetpp::cOutVector dsLidDR;
+  omnetpp::cOutVector outPortDR;
+  omnetpp::cOutVector pktidDR;
   unsigned int numDroppedCredits;
 
   // methods
@@ -156,7 +156,7 @@ class IBInBuf : public cSimpleModule
   int isHoqFree(int portNum, int vl);
   void handlePush(IBWireMsg *p_msg);
   virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
+  virtual void handleMessage(omnetpp::cMessage *msg);
   virtual void finish();
 
  public:

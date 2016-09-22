@@ -75,10 +75,10 @@ public:
 //
 // Infiniband Arbiter
 //
-class IBVLArb: public cSimpleModule
+class IBVLArb: public omnetpp::cSimpleModule
 {
  private:
-  cMessage *p_popMsg;
+  omnetpp::cMessage *p_popMsg;
 
   // parameters:
   int vlHighLimit;          // Max number of credits sent from High till Low
@@ -102,7 +102,7 @@ class IBVLArb: public cSimpleModule
   int LastSentWasLast;     // 1 if the sent data was last in the packet
   unsigned int numInPorts; // The number of input ports
   int InsidePacket;        // if 1 we are sending a packet (already arbitrated)
-  simtime_t lastSendTime;  // store the last arbitration send
+  omnetpp::simtime_t lastSendTime;  // store the last arbitration send
 
   // methods
   void setVLArbParams(const char *cfgStr, ArbTableEntry *tbl);
@@ -125,10 +125,10 @@ class IBVLArb: public cSimpleModule
   int  getOBufFCTBS(unsigned int vl);
 
   // statistics
-  cOutVector vl0Credits;  // the credits on VL0
-  cOutVector vl1Credits;  // the credits on VL1
-  cOutVector readyData;   // the VLs with ready data in binaru code
-  cOutVector arbDecision; // the resulting VL arbitrated -1 is invalid
+  omnetpp::cOutVector vl0Credits;  // the credits on VL0
+  omnetpp::cOutVector vl1Credits;  // the credits on VL1
+  omnetpp::cOutVector readyData;   // the VLs with ready data in binaru code
+  omnetpp::cOutVector arbDecision; // the resulting VL arbitrated -1 is invalid
   std::vector<long> portXmitWait;
 
  public:
@@ -143,7 +143,7 @@ class IBVLArb: public cSimpleModule
 
  protected:
   virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
+  virtual void handleMessage(omnetpp::cMessage *msg);
   virtual void finish();
   ~IBVLArb();
 };

@@ -38,6 +38,7 @@
 #include <cmath>
 #include <fstream>
 using namespace std;
+using namespace omnetpp;
 
 #if defined(__GNUC__)
 #define UNUSED __attribute__((__unused__))

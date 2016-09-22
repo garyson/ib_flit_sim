@@ -27,6 +27,7 @@
 //
 #include "ib_m.h"
 #include "sink.h"
+using namespace omnetpp;
 
 #include <cassert>
 #include <sstream>

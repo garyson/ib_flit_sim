@@ -36,6 +36,7 @@
 #include <vec_file.h>
 #include <cmath>
 using namespace std;
+using namespace omnetpp;
 
 Define_Module(IBApp);
 

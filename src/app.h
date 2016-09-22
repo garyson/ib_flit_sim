@@ -106,7 +106,7 @@
 //
 // Generates IB Application Messages
 //
-class IBApp : public cSimpleModule
+class IBApp : public omnetpp::cSimpleModule
 {
  private:
   // destination selection modes
@@ -133,7 +133,7 @@ class IBApp : public cSimpleModule
   // - length
   msgLenModes msgLenMode;          // possible values: param|set
   std::vector<int> msgLenSet; // a set of lengths
-  cLongHistogram msgLenProb;// probability for each index in msgLenSet
+  omnetpp::cLongHistogram msgLenProb;// probability for each index in msgLenSet
 
   // - shape
   double msg2msgGap_ns;   // extra delay from one msg end to the next start
@@ -148,7 +148,7 @@ class IBApp : public cSimpleModule
   unsigned int msgIdx;    // counter of generated messages
 
   // statistics
-  cOutVector seqIdxVec;   // track the current sequence index
+  omnetpp::cOutVector seqIdxVec;   // track the current sequence index
 
   // methods
  private:
@@ -161,7 +161,7 @@ class IBApp : public cSimpleModule
 
  protected:
   virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
+  virtual void handleMessage(omnetpp::cMessage *msg);
   virtual void finish();
 };
 

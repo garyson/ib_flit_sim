@@ -96,7 +96,7 @@
 //
 // Generates IB Packet Credit (messages); see NED file for more info.
 //
-class IBGenerator : public cSimpleModule
+class IBGenerator : public omnetpp::cSimpleModule
 {
  private:
   // parameters:
@@ -119,16 +119,16 @@ class IBGenerator : public cSimpleModule
   unsigned int numApps;             // width of the in port
   unsigned int numContPkts;         // count the number of packets of same app
   std::vector< IBAppMsg *> appMsgs; // requested messages by app port
-  cQueue VLQ[8];                    // holds outstanding out packets if any
+  omnetpp::cQueue VLQ[8];           // holds outstanding out packets if any
   unsigned int pktId;               // packets counter
-  cMessage *pushMsg;                // the self push message
+  omnetpp::cMessage *pushMsg;       // the self push message
   std::map<unsigned int, unsigned int> lastPktSnPerDst; // last packet serial number per DST
 
 
   // statistics
-  simtime_t firstPktSendTime; // the first send time
+  omnetpp::simtime_t firstPktSendTime; // the first send time
   unsigned int totalBytesSent; // total number of bytes sent
-  simtime_t timeLastSent; // Time last flit was sent
+  omnetpp::simtime_t timeLastSent; // Time last flit was sent
 
   // methods
  private:
@@ -143,13 +143,13 @@ class IBGenerator : public cSimpleModule
   unsigned int vlBySQ(unsigned sq);
   int  isRemoteHoQFree(int vl);
   void sendDataOut(IBDataMsg *p_msg);
-  void handlePush(cMessage *msg);
+  void handlePush(omnetpp::cMessage *msg);
   void handleSent(IBSentMsg *p_sent);
   void handleApp(IBAppMsg *p_msg);
   virtual ~IBGenerator();
  protected:
   virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
+  virtual void handleMessage(omnetpp::cMessage *msg);
   virtual void finish();
 };
 

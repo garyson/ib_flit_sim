@@ -25,7 +25,7 @@
 //
 // The packet forwarder is responsible for output port selection
 //
-class Pktfwd : public cSimpleModule
+class Pktfwd : public omnetpp::cSimpleModule
 {
 public:
 

@@ -125,7 +125,7 @@ struct QPIdentifier {
 //
 // Generates IB Application Messages
 //
-class Controller : public cSimpleModule
+class Controller : public omnetpp::cSimpleModule
 {
  private:
   // Identify each message in printable strings
@@ -135,7 +135,7 @@ class Controller : public cSimpleModule
   std::unique_ptr<Socket> sock;
 
   // Stop message used to return control to Dimemas
-  cMessage stopMessage;
+  omnetpp::cMessage stopMessage;
 
   // Active message table; used to resolve completions for MPI data messages
   MessageTable active;
@@ -175,13 +175,13 @@ class Controller : public cSimpleModule
   void matchRReq(DimReqMsg *rreq);
   void handleRTR(DimReqMsg *rtr);
   void enqueueRTR(DimReqMsg *rtr);
-  void handleSendCompletion(DimReqMsg *orig_msg, simtime_t when);
+  void handleSendCompletion(DimReqMsg *orig_msg, omnetpp::simtime_t when);
 
   int getLid(unsigned int node);
 
  protected:
   virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
+  virtual void handleMessage(omnetpp::cMessage *msg);
   virtual void finish();
 };
 

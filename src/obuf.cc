@@ -23,6 +23,7 @@
 //
 #include "ib_m.h"
 #include "obuf.h"
+using namespace omnetpp;
 
 Define_Module( IBOutBuf );
 

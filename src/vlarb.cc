@@ -28,6 +28,7 @@
 #include "ibuf.h"
 #include <iomanip>
 using namespace std;
+using namespace omnetpp;
 
 Define_Module( IBVLArb );
 

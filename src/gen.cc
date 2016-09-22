@@ -36,6 +36,7 @@
 #include "gen.h"
 #include "vlarb.h"
 #include <vec_file.h>
+using namespace omnetpp;
 
 Define_Module(IBGenerator);
 

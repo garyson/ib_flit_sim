@@ -66,10 +66,10 @@ enum class IBPopType {
 //
 // Output Buffer for sending IB FLITs and VL credit updates
 //
-class IBOutBuf : public cSimpleModule
+class IBOutBuf : public omnetpp::cSimpleModule
 {
  private:
-  cMessage *p_popMsg;
+  omnetpp::cMessage *p_popMsg;
 
   // parameters:
   int    qSize;          // Max number of FLITs the Q can handle
@@ -78,11 +78,11 @@ class IBOutBuf : public cSimpleModule
   // data strcture
   int curFlowCtrVL;    // The VL to sent FC on. If == 8 loop back to 0
   bool Enabled;        // Is this port enabled or is it part of a 8x/12x
-  cQueue queue;             // holds the outstanding data
+  omnetpp::cQueue queue;// holds the outstanding data
   int numDataCreditsQueued; // needed to make sure we do not overflow the qSize
   unsigned int pendingFreeCount; // number of credits to hand back to VLArb
   IBPopType prevPop;        // last pop type (know when "free" msg)
-  simtime_t prevFCTime;     // track the last time the VL0 flow control sent
+  omnetpp::simtime_t prevFCTime;     // track the last time the VL0 flow control sent
   std::vector<long> prevSentFCCL;  // Sent FCCL per VL
   std::vector<long> prevSentFCTBS; // Sent FCTBS per VL
   std::vector<long> FCTBS; // num data packet flits sent total in this VL
@@ -95,26 +95,26 @@ class IBOutBuf : public cSimpleModule
   void handlePop();
   void handleRxCred(IBRxCredMsg *p_msg);
   virtual void initialize();
-  virtual void handleMessage(cMessage *msg);
+  virtual void handleMessage(omnetpp::cMessage *msg);
   virtual void finish();
 protected:
   virtual ~IBOutBuf();
 
   // statistics
-  cLongHistogram   qDepthHist;      // number of flits in the out queue
-  cDoubleHistogram packetStoreHist; // number of packets in the queue
-  cDoubleHistogram flowControlDelay;// track the time between flow controls
-  cOutVector       qDepth;          // track the Q usage over time
-  simtime_t packetHeadTimeStamp; // track time stamp of the current pop packet
+  omnetpp::cLongHistogram   qDepthHist;      // number of flits in the out queue
+  omnetpp::cDoubleHistogram packetStoreHist; // number of packets in the queue
+  omnetpp::cDoubleHistogram flowControlDelay;// track the time between flow controls
+  omnetpp::cOutVector       qDepth;          // track the Q usage over time
+  omnetpp::simtime_t packetHeadTimeStamp; // track time stamp of the current pop packet
 
-  simtime_t firstPktSendTime; // the first send time
+  omnetpp::simtime_t firstPktSendTime; // the first send time
   unsigned int totalBytesSent; // total number of bytes sent
-  cStdDev flitsSources; // track flit source for Fair Share
+  omnetpp::cStdDev flitsSources; // track flit source for Fair Share
 
 public:
    // used by the VLA to validate the last arbitration
    int  getNumFreeCredits() {
-      return(qSize - queue.length());
+      return(qSize - queue.getLength());
    };
 
    // used by VLA to know how many data packets were already sent

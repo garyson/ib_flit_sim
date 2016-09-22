@@ -20,6 +20,7 @@
 #include "pktfwd.h"
 #include <vec_file.h>
 #include "obuf.h"
+using namespace omnetpp;
 
 Define_Module(Pktfwd);
 
