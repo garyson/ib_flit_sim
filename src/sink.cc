@@ -289,7 +289,7 @@ void IBSink::handlePop(cMessage *p_msg)
 {
   // if we are under hiccup - do nothing or
   // got to pop from the queue if anything there
-  if ( !queue.empty() && ! duringHiccup ) {
+  if ( !queue.isEmpty() && ! duringHiccup ) {
     IBDataMsg *p_dataMsg = (IBDataMsg *)queue.pop();
     EV << "-I- " << getFullPath() << " De-queued data:"
        << p_dataMsg->getName() << endl;

@@ -124,17 +124,17 @@ IBOutBuf::qMessage(IBDataMsg *p_msg) {
   //p_msg->setTimestamp(simTime());
 
   if ( p_popMsg->isScheduled() ) {
-    if ( qSize <= queue.length() ) {
+    if ( qSize <= queue.getLength() ) {
       throw cRuntimeError("-E- %s  need to insert into a full Q. qSize:%d qLength:%d",
-                getFullPath().c_str(), qSize, queue.length());
+                getFullPath().c_str(), qSize, queue.getLength());
     }
 
     EV << "-I- " << getFullPath() << " queued data msg:" << p_msg->getName()
-       << " Qdepth " << queue.length() << endl;
+       << " Qdepth " << queue.getLength() << endl;
 
     queue.insert(p_msg);
-    qDepth.record(queue.length());
-    qDepthHist.collect(queue.length());
+    qDepth.record(queue.getLength());
+    qDepthHist.collect(queue.getLength());
   } else {
     // track the time this PACKET (all credits) spent in the Q
     // the last credit of a packet always
@@ -233,7 +233,7 @@ void IBOutBuf::handlePop()
   }
 
   // got to pop from the queue if anything there
-  if ( !queue.empty() ) {
+  if ( !queue.isEmpty() ) {
     IBWireMsg *p_msg = (IBWireMsg *)queue.pop();
     if ( p_msg->getKind() == IB_DATA_MSG ) {
       IBDataMsg *p_cred = (IBDataMsg *)p_msg;
@@ -264,7 +264,7 @@ void IBOutBuf::handlePop()
     }
   }
 
-  qDepth.record(queue.length());
+  qDepth.record(queue.getLength());
 } // handlePop
 
 // Handle rxCred

@@ -134,7 +134,7 @@ bool IBGenerator::arbitrateApps()
       return true;
     }
     if ((numContPkts < maxContPkts) &&
-        ((unsigned)VLQ[vl].length() < maxQueuedPerVL)) {
+        ((unsigned)VLQ[vl].getLength() < maxQueuedPerVL)) {
       EV << "-I-" << getFullPath() << " arbitrate apps continue" << endl;
       return true;
     }
@@ -148,7 +148,7 @@ bool IBGenerator::arbitrateApps()
     EV << "-I-" << getFullPath() << " trying app: " << a << endl;
     if (appMsgs[a]) {
       unsigned vl = vlBySQ(appMsgs[a]->getSQ());
-      if ((unsigned)VLQ[vl].length() < maxQueuedPerVL) {
+      if ((unsigned)VLQ[vl].getLength() < maxQueuedPerVL) {
         EV << "-I-" << getFullPath() << " arbitrate apps selected:"
            << a << endl;
         if (curApp != a && appMsgs[curApp]
@@ -235,7 +235,7 @@ void IBGenerator::getNextAppMsg()
   // now we have a new FLIT at hand we can either Q it or send it over
   // if there is a place for it in the VLA
   unsigned int vl = p_msg->getVL();
-  if (VLQ[vl].empty() && isRemoteHoQFree(vl)) {
+  if (VLQ[vl].isEmpty() && isRemoteHoQFree(vl)) {
     sendDataOut(p_cred);
   } else {
     VLQ[vl].insert(p_cred);
@@ -356,7 +356,7 @@ void IBGenerator::handleSent(IBSentMsg *p_sent){
   // We can not just send - need to see if the HoQ is free...
   // NOTE : since we LOCK the HoQ when asking if HoQ is free we
   // must make sure we have something to send before we ask about it
-  if (!VLQ[vl].empty()) {
+  if (!VLQ[vl].isEmpty()) {
     if (isRemoteHoQFree(vl)) {
       IBDataMsg *p_msg = (IBDataMsg *)VLQ[vl].pop();
       EV << "-I- " << getFullPath() << " de-queue packet:"

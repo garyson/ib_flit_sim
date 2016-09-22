@@ -181,7 +181,7 @@ void IBInBuf::sendTxCred(int vl, long FCCL)
 // Try to send the HoQ to the VLA
 void IBInBuf::updateVLAHoQ(short int portNum, short vl)
 {
-  if (Q[portNum][vl].empty()) return;
+  if (Q[portNum][vl].isEmpty()) return;
 
   // find the VLA connected to the given port and
   // call its method for checking and setting HoQ
