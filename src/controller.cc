@@ -80,7 +80,7 @@ void Controller::initialize(){
      << " Listening for Dimemas VenusClient connection on "
      << listener.getName() << '\n';
 
-  sock = std::unique_ptr<Socket>(new Socket(std::move(listener.accept())));
+  sock = std::unique_ptr<Socket>(new Socket(listener.accept()));
   EV << "-I- " << getFullPath()
      << " Accepted connection from " << sock->getRemoteName() << '\n';
   } catch (SocketException &ex) {
@@ -409,7 +409,7 @@ void Controller::handleMessage(cMessage *p_msg){
   } else {
       /* Get the completion message */
       auto done_msg = (DimDoneMsg *)p_msg;
-      auto orig_msg = std::move(this->lookupMessage(done_msg->getMsgId()));
+      auto orig_msg = this->lookupMessage(done_msg->getMsgId());
       if (!orig_msg) {
           throw cRuntimeError("Got completion for unknown message %s\n", done_msg->getName());
       }
