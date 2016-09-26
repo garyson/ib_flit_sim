@@ -3,6 +3,8 @@
 #include "VLState.h"
 #include "ib_m.h"
 
+using namespace omnetpp;
+
 VLState::VLState(unsigned int id, unsigned int expectedFCPCount)
     : id(id), totalExpectedFCPCount(expectedFCPCount)
 {

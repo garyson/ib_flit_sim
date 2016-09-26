@@ -45,6 +45,8 @@ simple Mock
 
 namespace @TESTNAME@ {
 
+using namespace omnetpp;
+
 class Mock;
 
 class MockVLState : public VLState {

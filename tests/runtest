@@ -23,7 +23,7 @@ cp -pPR lib work/
 
 opp_test gen $TESTS || exit 1
 pushd work
-opp_makemake -f -I../../src -L../../out/gcc-debug/src -lib_flit_sim --deep \
+opp_makemake -f -I../../src -L../../src -lib_flit_sim --deep \
 	--no-deep-includes || exit 1
 make || exit 1
 popd

@@ -16,8 +16,8 @@ class VLState {
 public:
     VLState(unsigned int id, unsigned int expectedFCPCount = 1);
     virtual ~VLState();
-    void sendCreditUpdate(cSimpleModule *source, const char *gateName,
-                          simtime_t time);
+    void sendCreditUpdate(omnetpp::cSimpleModule *source, const char *gateName,
+                          omnetpp::simtime_t time);
     void acceptFCP();
     void handleRecvFCP(IBFlowControl *msg);
     void finish();

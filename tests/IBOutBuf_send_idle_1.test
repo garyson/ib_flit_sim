@@ -44,6 +44,8 @@ simple Mock
 
 namespace @TESTNAME@ {
 
+using namespace omnetpp;
+
 class Mock : public cSimpleModule {
 public:
     virtual void initialize() override;
