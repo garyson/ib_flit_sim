@@ -267,7 +267,7 @@ void IBSink::handleData(IBDataMsg *p_msg)
 
   // for iBW calculations
   if (simTime() >= startStatCol_sec) {
-    AccBytesRcv += p_msg->getByteLength(); // p_msg->getBitLength()/8;
+    AccBytesRcv += p_msg->getByteLength();
   }
 
   // we might be arriving on empty buffer:

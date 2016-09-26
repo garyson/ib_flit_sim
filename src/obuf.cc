@@ -186,7 +186,7 @@ int IBOutBuf::sendFlowControl()
       sprintf(name, "fc-%d-%ld", i, flowCtrlId++);
       IBFlowControl *p_msg = new IBFlowControl(name, IB_FLOWCTRL_MSG);
 
-      p_msg->setBitLength(8*8);
+      p_msg->setByteLength(8);
       p_msg->setVL(i);
       p_msg->setFCCL(FCCL[i]);
       p_msg->setFCTBS(FCTBS[i]);

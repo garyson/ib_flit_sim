@@ -200,7 +200,6 @@ void IBGenerator::getNextAppMsg()
   sprintf(name, "data-%u-%u-%u-%u", srcLid, msgIdx, thisPktIdx, thisFlitIdx);
   p_cred = new IBDataMsg(name, IB_DATA_MSG);
   p_cred->setSrcLid(srcLid);
-  p_cred->setBitLength(flitSize_B*8);
   p_cred->setByteLength(flitSize_B);
 
   p_cred->setDstLid(thisPktDst);
