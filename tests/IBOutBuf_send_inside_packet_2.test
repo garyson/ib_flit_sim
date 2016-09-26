@@ -85,11 +85,9 @@ void Mock::initialize()
     outMsg->setPacketSn(0);
     outMsg->setFlitSn(0);
     outMsg->setPacketLength(10);
-    outMsg->setPacketLengthBytes(640);
     outMsg->setDstLid(2);
     outMsg->setSrcLid(1);
     outMsg->setSL(0);
-    outMsg->setUseStatic(1);
     outMsg->setBeforeAnySwitch(true);
     /* cPacket field required for valid transmission delay */
     outMsg->setByteLength(640);

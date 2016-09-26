@@ -67,11 +67,9 @@ message IBDataMsg extends IBWireMsg
   int packetSn;         // serial number of packet by the source to this dst
   int flitSn;           // serial number with the flit: 0..N
   int PacketLength;     // Total number of credits in this packet.
-  int PacketLengthBytes;// Total packet Length in Bytes
   int dstLid;           // target LID
   int srcLid;           // source LID
   int SL;               // the SL
-  int useStatic;        // Used in ib_credits
   simtime_t SwTimeStamp;// Time stamp set when credit gets in IBRX
   simtime_t injectionTime; // the time the credit hit the wire
   bool beforeAnySwitch; // set to true by HCA and then to false by the first switch - to identify loops

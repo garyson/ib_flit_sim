@@ -122,11 +122,9 @@ void Mock::sendMessages()
     outMsg->setPacketSn(0);
     outMsg->setFlitSn(0);
     outMsg->setPacketLength(2);
-    outMsg->setPacketLengthBytes(128);
     outMsg->setDstLid(2);
     outMsg->setSrcLid(1);
     outMsg->setSL(0);
-    outMsg->setUseStatic(1);
     outMsg->setBeforeAnySwitch(true);
     /* cPacket field required for valid transmission delay */
     outMsg->setByteLength(64);
@@ -162,11 +160,9 @@ void Mock::handleData(IBDataMsg *msg)
         outMsg->setPacketSn(0);
         outMsg->setFlitSn(1);
         outMsg->setPacketLength(2);
-        outMsg->setPacketLengthBytes(128);
         outMsg->setDstLid(2);
         outMsg->setSrcLid(1);
         outMsg->setSL(0);
-        outMsg->setUseStatic(1);
         outMsg->setBeforeAnySwitch(true);
         /* cPacket field required for valid transmission delay */
         outMsg->setByteLength(64);

@@ -213,7 +213,6 @@ void IBGenerator::getNextAppMsg()
   p_cred->setPktIdx(thisPktIdx);
   p_cred->setMsgLen(thisMsgLen);
   p_cred->setPacketLength(p_msg->getPktLenFlits());
-  p_cred->setPacketLengthBytes(p_msg->getPktLenBytes());
 
   p_cred->setBeforeAnySwitch(true);
 
