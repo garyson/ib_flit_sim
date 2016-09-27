@@ -105,11 +105,7 @@ int IBGenerator::isRemoteHoQFree(int vl){
   // find the VLA connected to the given port and
   // call its method for checking and setting HoQ
   cGate *p_gate = gate("out")->getPathEndGate();
-  IBVLArb *p_vla = dynamic_cast<IBVLArb *>(p_gate->getOwnerModule());
-  if ((p_vla == NULL) || strcmp(p_vla->getName(), "vlarb")) {
-    error("cannot get VLA for generator out port");
-  }
-
+  IBVLArb *p_vla = check_and_cast<IBVLArb *>(p_gate->getOwnerModule());
   int remotePortNum = p_gate->getIndex();
   return(p_vla->isHoQFree(remotePortNum, vl));
 }

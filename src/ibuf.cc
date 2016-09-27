@@ -82,10 +82,7 @@ void IBInBuf::initialize()
     if (Switch == NULL) {
       throw cRuntimeError("Could not find parent Switch module");
     }
-    pktfwd = dynamic_cast<Pktfwd*>(getSimulation()->getModule(Switch->findSubmodule("pktfwd")));
-    if (pktfwd == NULL) {
-      throw cRuntimeError("Could not find Packet FWDer");
-    }
+    pktfwd = check_and_cast<Pktfwd*>(getSimulation()->getModule(Switch->findSubmodule("pktfwd")));
     ISWDelay = Switch->par("ISWDelay");
   }
 
@@ -188,10 +185,7 @@ void IBInBuf::updateVLAHoQ(short int portNum, short vl)
   cGate *p_gate = gate("out", portNum)->getPathEndGate();
   if (! hcaIBuf) {
     int remotePortNum = p_gate->getIndex();
-    IBVLArb *p_vla = dynamic_cast<IBVLArb *>(p_gate->getOwnerModule());
-    if ((p_vla == NULL) || strcmp(p_vla->getName(), "vlarb")) {
-      throw cRuntimeError("-E- fail to get VLA from out port: %d", portNum);
-    }
+    IBVLArb *p_vla = check_and_cast<IBVLArb *>(p_gate->getOwnerModule());
     if (! p_vla->isHoQFree(remotePortNum, vl))
       return;
 

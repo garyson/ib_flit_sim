@@ -162,10 +162,7 @@ void IBVLArb::initialize()
 int IBVLArb::getOBufFCTBS(unsigned int vl)
 {
   cGate *p_gate = gate("out")->getPathEndGate();
-  IBOutBuf *p_oBuf = dynamic_cast<IBOutBuf *>(p_gate->getOwnerModule());
-  if ((p_oBuf == NULL) || strcmp(p_oBuf->getName(), "obuf")) {
-    throw cRuntimeError("-E- %s fail to get OBUF from out port", getFullPath().c_str());
-  }
+  IBOutBuf *p_oBuf = check_and_cast<IBOutBuf *>(p_gate->getOwnerModule());
   return(p_oBuf->getFCTBS(vl));
 }
 
@@ -251,10 +248,7 @@ int IBVLArb::isValidArbitration(unsigned int portNum, unsigned int vl,
                                 int isFirstPacket, int numPacketCredits)
 {
   cGate *p_gate = gate("out")->getPathEndGate();
-  IBOutBuf *p_oBuf = dynamic_cast<IBOutBuf *>(p_gate->getOwnerModule());
-  if ((p_oBuf == NULL) || strcmp(p_oBuf->getName(), "obuf")) {
-    throw cRuntimeError("-E- %s fail to get OBUF from out port", getFullPath().c_str());
-  }
+  IBOutBuf *p_oBuf = check_and_cast<IBOutBuf *>(p_gate->getOwnerModule());
 
   // check the entire packet an fit in
   int obufFree = p_oBuf->getNumFreeCredits();
@@ -269,11 +263,7 @@ int IBVLArb::isValidArbitration(unsigned int portNum, unsigned int vl,
   // only for non HCA Arbiters and in case of new packet being sent
   if (!hcaArb && isFirstPacket) {
     cGate *p_remOutPort = gate("in", portNum)->getPathStartGate();
-    IBInBuf *p_inBuf = dynamic_cast<IBInBuf *>(p_remOutPort->getOwnerModule());
-    if ((p_inBuf == NULL) || strcmp(p_inBuf->getName(), "ibuf") ) {
-      throw cRuntimeError("-E- %s fail to get InBuf from in port: %d",
-                getFullPath().c_str(), portNum);
-    }
+    IBInBuf *p_inBuf = check_and_cast<IBInBuf *>(p_remOutPort->getOwnerModule());
 
     if (!p_inBuf->incrBusyUsedPorts()) {
       EV << "-I- " << getFullPath()
