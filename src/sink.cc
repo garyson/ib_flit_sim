@@ -316,8 +316,12 @@ void IBSink::handleHiccup(cMessage *p_msg)
 
   if ( duringHiccup ) {
     // we are inside a hiccup - turn it off and schedule next ON
+    hiccupStats.collect( simTime() - hiccupStart );
     duringHiccup = 0;
     delay_us = par("hiccupDelay");
+    if (delay_us < 0) {
+        throw cRuntimeError("hiccupDelay %0.9f < 0", delay_us.dbl());
+    }
     EV << "-I- " << getFullPath() << " Hiccup OFF for:"
        << delay_us << "usec" << endl;
 
@@ -327,13 +331,16 @@ void IBSink::handleHiccup(cMessage *p_msg)
   } else {
     // we need to start a new hiccup
     duringHiccup = 1;
-    delay_us = par("hiccupDuration");
+    do {
+        delay_us = par("hiccupDuration");
+    } while (delay_us < 0);
 
     EV << "-I- " << getFullPath() << " Hiccup ON for:" << delay_us
        << "usec" << endl ;
+
+    hiccupStart = simTime();
   }
 
-  hiccupStats.collect( simTime() );
   scheduleAt(simTime()+delay_us*1e-6, p_hiccupMsg);
 }
 
@@ -374,6 +381,13 @@ void IBSink::finish()
   msgF2FLatency.record();
   enoughPktsLatency.record();
   enoughToLastPktLatencyStat.record();
+  hiccupStats.record();
+
+  EV << "STAT: " << getFullPath() << " hiccup duration num/avg/max/std:"
+       << hiccupStats.getCount() << " / "
+       << hiccupStats.getMean() << " / "
+       << hiccupStats.getMax() << " / "
+       << hiccupStats.getStddev() << endl;
 
   double iBW = AccBytesRcv / (simTime() - startStatCol_sec);
   recordScalar("Sink-BW-MBps", iBW/1e6);

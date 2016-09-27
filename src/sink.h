@@ -77,6 +77,7 @@ class IBSink : public omnetpp::cSimpleModule
   unsigned int repFirstPackets; // if not zero declare a message as done after first repFirstPackets arrived
 
   bool notifyOnDone; // send a message to the "done" gate when message done?
+  omnetpp::simtime_t hiccupStart;
 
   // data structure
   int     duringHiccup;                  // set to 1 if during a hiccup
