@@ -77,6 +77,7 @@ message IBDataMsg extends IBWireMsg
 
 message IBFlowControl extends IBWireMsg
 {
+  byteLength = 8;
   long FCTBS;
   long FCCL;
 }
