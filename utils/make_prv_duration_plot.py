@@ -45,6 +45,7 @@ import yaml
 
 import pandas as pd
 import matplotlib.pyplot as plt
+from scipy.stats import trim_mean
 
 col_duration = 'duration_ns'
 col_size = 'size_bytes'
