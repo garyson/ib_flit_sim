@@ -105,6 +105,7 @@ class IBGenerator : public omnetpp::cSimpleModule
   unsigned int maxContPkts;  // maximal continoues packets for msg
   unsigned int maxQueuedPerVL;// maximal num FLITs Queued on VL Q
   double genDlyPerByte_ns;    // the time it takes to bring Byte from PCIe
+  unsigned int maxInlineData_B; // number of bytes of inline data (no PCIe overhead in transfer)
 
   // - shape
   double flit2FlitGap_ns; // extra delay from one flit end to the other

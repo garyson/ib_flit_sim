@@ -73,6 +73,7 @@ message IBDataMsg extends IBWireMsg
   simtime_t SwTimeStamp;// Time stamp set when credit gets in IBRX
   simtime_t injectionTime; // the time the credit hit the wire
   bool beforeAnySwitch; // set to true by HCA and then to false by the first switch - to identify loops
+  bool sendInline;      // set to true if sent inline (no PCIe overhead on send)
 }
 
 message IBFlowControl extends IBWireMsg

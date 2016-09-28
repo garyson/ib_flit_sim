@@ -63,6 +63,8 @@ void IBGenerator::initialize() {
   numContPkts = 0;
   maxContPkts = par("maxContPkts");
   maxQueuedPerVL = par("maxQueuedPerVL");
+  maxInlineData_B = par("maxInlineData");
+  std::cerr << "max inline data: " << maxInlineData_B << '\n';
 
   pushMsg = new cMessage("push1", IB_PUSH_MSG);
 
@@ -197,6 +199,7 @@ void IBGenerator::getNextAppMsg()
   p_cred = new IBDataMsg(name, IB_DATA_MSG);
   p_cred->setSrcLid(srcLid);
   p_cred->setByteLength(flitSize_B);
+  p_cred->setSendInline(p_msg->getLenBytes() < maxInlineData_B);
 
   p_cred->setDstLid(thisPktDst);
   p_cred->setSL(p_msg->getSQ());
@@ -316,21 +319,27 @@ void IBGenerator::handleApp(IBAppMsg *p_msg){
 // send out data and wait for it to clear
 void IBGenerator::sendDataOut(IBDataMsg *p_msg){
   unsigned int bytes = p_msg->getByteLength();
-  double delay_ns = ((double)par("popDlyPerByte"))*bytes;
+  double delay_ns = 0;
 
-  if (p_msg->getPktIdx() == 0) {
-      delay_ns += (double)par("flit2FlitGap");
+  if (!p_msg->getSendInline()) {
+      delay_ns = ((double)par("popDlyPerByte"))*bytes;
+
+    if (p_msg->getPktIdx() == 0) {
+        delay_ns += (double)par("flit2FlitGap");
+    } else {
+        int factor = p_msg->getPktIdx() + 1;
+        delay_ns += (double)par("flit2FlitGap") / factor;
+    }
+
+    sendDelayed(p_msg, delay_ns*1e-9, "out");
   } else {
-      int factor = p_msg->getPktIdx() + 1;
-      delay_ns += (double)par("flit2FlitGap") / factor;
+    send(p_msg, "out");
   }
 
   // time stamp to enable tracking time in Fabric
   p_msg->setInjectionTime(simTime()+delay_ns*1e-9);
   p_msg->setTimestamp(simTime()+delay_ns*1e-9);
   totalBytesSent += bytes;
-
-  sendDelayed(p_msg, delay_ns*1e-9, "out");
 
   EV << "-I- " << getFullPath()
      << " sending " << p_msg->getName()

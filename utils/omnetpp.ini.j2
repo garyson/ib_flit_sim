@@ -25,15 +25,16 @@ include /home/pmacarth/src/omnetpp-workspace/ib_model/networks/pcie_8x_g3.ini
 **.speed = 14Gbps
 **.maxVL = 0 # note that maxvl is the max value of the VL not num
 
-**.perMsgDelay = 1800ns
+**.perMsgDelay = 1200ns
+**.inlineMsgDelay = 800ns
 
 ##################################################################
 # SINK
 ##################################################################
 # Sink
-**.sink.hiccupDuration = 0.001us
+**.sink.hiccupDuration = normal(1us, 0.25us)
 # If we do not want the sink to create hiccups, configure a large value
-**.sink.hiccupDelay = 10000us
+**.sink.hiccupDelay = exponential(100us)
 # no tracking of first n packets
 **.sink.repFirstPackets = 0
 
@@ -114,8 +115,9 @@ include /home/pmacarth/src/omnetpp-workspace/ib_model/networks/pcie_8x_g3.ini
 **.maxContPkts = 10
 **.popDlyPerByte = 0ns
 **.maxQueuedPerVL = 4
-**.flit2FlitGap = 50ns
+**.flit2FlitGap = 33ns
 **.pkt2PktGap = 50ns
+**.maxInlineData = 256B
 
 ##################################################################
 # SWITCH

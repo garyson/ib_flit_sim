@@ -26,6 +26,8 @@ simple Controller
   string socketListenPort = "10000"; // port to listen on
   double dimemasTimescale @unit(s);
   double perMsgDelay @unit(ns);
+  double inlineMsgDelay @unit(ns);
+  int maxInlineData @unit(B) = default(0B);
   @display("i=block/telnet");
  gates:
   output out[];

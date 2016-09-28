@@ -268,7 +268,11 @@ void Controller::enqueueRTR(DimReqMsg *req)
 /** Sends a message to the application object indicated by the source rank. */
 void Controller::sendMessage(DimReqMsg *p_msg, bool doDelay)
 {
-    double delay = doDelay ? par("perMsgDelay") : 0;
+    double delay = 0;
+    if (doDelay) {
+        delay = (p_msg->getLenBytes() > par("maxInlineData").longValue())
+            ? par("perMsgDelay") : par("inlineMsgDelay");
+    }
     simtime_t send_time = p_msg->getInject_time() + delay * 1e-9;
     simtime_t cur = simTime();
     if (send_time >= cur) {

@@ -35,6 +35,8 @@ simple IBGenerator
 
   // - SQ to VL TBD
   int maxVL;
+
+  int maxInlineData @unit(B) = default(0B); // maximum data inline with WR
  gates:
   input sent;
   output out;
