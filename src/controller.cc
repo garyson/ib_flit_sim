@@ -182,7 +182,7 @@ bool Controller::handleDimemasRReq(std::string args)
     // generate a new message
     auto p_msg = makeMessage(timestamp, IB_DIM_RREQ_MSG, srcNode, dstNode,
                              msgSize, args);
-    sendMessage(p_msg, true);
+    sendMessage(p_msg);
 
     return true;
 }
@@ -361,7 +361,7 @@ void Controller::handleRTR(DimReqMsg *rtr)
                                   rtr->getDstNode(), rtr->getSrcNode(),
                                   rtr->getLenBytes(),
                                   rtr->getContextString());
-    sendMessage(send);
+    sendMessage(send, true);
     ++rendezvousCount;
 }
 
