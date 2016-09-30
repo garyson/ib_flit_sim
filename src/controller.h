@@ -113,15 +113,6 @@ using DimMessageID = unsigned int;
 using MessageTable = std::map<DimMessageID, std::unique_ptr<DimReqMsg> >;
 using MessageQueue = std::queue<DimReqMsg *>;
 
-/* A simple structure to uniquely identify a queue pair used by an instance of
- * the simulated application. */
-struct QPIdentifier {
-    int lid;
-    int qpn;
-
-    QPIdentifier(int l, int q) : lid(l), qpn(q) {}
-};
-
 //
 // Generates IB Application Messages
 //
