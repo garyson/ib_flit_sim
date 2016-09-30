@@ -22,11 +22,11 @@ package ib_model;
 simple Controller
 {
  parameters:
-  string socketListenHost = "127.0.0.1"; // host to listen on
-  string socketListenPort = "10000"; // port to listen on
-  double dimemasTimescale @unit(s);
-  double perMsgDelay @unit(ns);
-  double inlineMsgDelay @unit(ns);
+  string socketListenHost = default("127.0.0.1"); // host to listen on
+  string socketListenPort = default("10000"); // port to listen on
+  double dimemasTimescale @unit(s) = default(1ns);
+  double perMsgDelay @unit(ns) = default(0ns);
+  double inlineMsgDelay @unit(ns) = default(0ns);
   int maxInlineData @unit(B) = default(0B);
   @display("i=block/telnet");
  gates:

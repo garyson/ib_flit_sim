@@ -23,15 +23,14 @@ simple IBGenerator
 {
  parameters:
   int srcLid; // the generator LID
-  int flitSize @unit(B); // number of bytes in each credit/FLIT
-  int maxContPkts; // maximal continoues packets for msg
+  int flitSize @unit(B) = default(64B); // number of bytes in each credit/FLIT
+  int maxContPkts = default(10); // maximal continoues packets for msg
   double genDlyPerByte @unit(ns); // the speed of generating new data
-  double popDlyPerByte @unit(ns); // the speed of sending to VLA
-  int maxQueuedPerVL; // the maximal outstanding FLITs in Q per VL
+  double popDlyPerByte @unit(ns) = default(0ns); // the speed of sending to VLA
+  int maxQueuedPerVL = default(4); // the maximal outstanding FLITs in Q per VL
 
   // - shape
   volatile double flit2FlitGap @unit(ns); // extra delay between flits
-  volatile double pkt2PktGap @unit(ns); // extra delay between packets
 
   // - SQ to VL TBD
   int maxVL;

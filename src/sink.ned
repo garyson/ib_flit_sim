@@ -25,13 +25,13 @@ package ib_model;
 simple IBSink
 {
  parameters:
-  int flitSize @unit(B);       // flit size in bytes
+  int flitSize @unit(B) = default(64B);       // flit size in bytes
   double popDlyPerByte @unit(ns);   // the PCI Exp drain rate
   int maxVL;                      // Maximum VL we send on
-  volatile double hiccupDuration @unit(us); // the time a hiccup may take
-  volatile double hiccupDelay @unit(us);    // the time between hiccups
-  double startStatCol @unit(s);  // Time to start statistics collection from
-  int repFirstPackets; // number of first packets that if are accepted record message latency done
+  volatile double hiccupDuration @unit(us) = default(0.001ns); // the time a hiccup may take
+  volatile double hiccupDelay @unit(us) = default(10000us);    // the time between hiccups
+  double startStatCol @unit(s) = default(0us);  // Time to start statistics collection from
+  int repFirstPackets = default(0); // number of first packets that if are accepted record message latency done
  gates:
   input in;
   output sent;

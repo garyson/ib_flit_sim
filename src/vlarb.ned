@@ -27,13 +27,13 @@ simple IBVLArb
  parameters:
   int isHcaArbiter;        // if not zero means the VLA is in HCA
   int numPorts;            // number of input ports
-  int coreFreq @unit(Hz);  // Core frequency in MHz
+  int coreFreq @unit(Hz) = default(1000MHz);  // Core frequency in MHz
   int busWidth @unit(B);   // Switch bus width in bytes (from in-buf 2 vla)
   int maxVL;               // Maximum VL we send on
-  int vlHighLimit;         // IB VL Arb High Limit
-  string highVLArbEntries; // "vl:weight vl:weight ..."
-  string lowVLArbEntries;  // "vl:weight vl:weight ..."
-  bool useFCFSRQArb;       // if true will arbitrate RQs on same VL by oldest
+  int vlHighLimit = default(16);         // IB VL Arb High Limit
+  string highVLArbEntries = default("0:1"); // "vl:weight vl:weight ..."
+  string lowVLArbEntries = default("0:1");  // "vl:weight vl:weight ..."
+  bool useFCFSRQArb = default(false);       // if true will arbitrate RQs on same VL by oldest
  gates:
   input in[];
   input txCred;

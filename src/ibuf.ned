@@ -26,29 +26,29 @@ simple IBInBuf
 {
  parameters:
   // input line width 4x,8x,12x
-  int width;
+  int width = default(4);
   // if 1 means the input buffer is part  of HCA (no routing required)
   int isHcaIBuf;
   // number of output ports to drive to
   int numPorts;
   // max number of parallel sends = switch "speed-up"
-  int maxBeingSent;
+  int maxBeingSent = default(3);
   // the total buffer size in credits
-  int totalBufferSize;
+  int totalBufferSize = default(2048);
   // max VL num. If only VL0 value is 0
   int maxVL;
   // declares the buffer as lossy - drop packets if full but lie about the free credits
-  bool lossyMode;
+  bool lossyMode = default(false);
 
   // Each VL is assigned a max number of static credits
-  int maxStatic0;
-  int maxStatic1;
-  int maxStatic2;
-  int maxStatic3;
-  int maxStatic4;
-  int maxStatic5;
-  int maxStatic6;
-  int maxStatic7;
+  int maxStatic0 = default(512);
+  int maxStatic1 = default(512);
+  int maxStatic2 = default(512);
+  int maxStatic3 = default(512);
+  int maxStatic4 = default(512);
+  int maxStatic5 = default(512);
+  int maxStatic6 = default(512);
+  int maxStatic7 = default(512);
  gates:
   input in;
   input sent[];

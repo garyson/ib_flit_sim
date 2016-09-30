@@ -26,7 +26,7 @@ simple IBOutBuf
 {
     parameters:
         bool enabled = default(true); // set to false to turn OFF the link
-        double size;                  // the number of flits the Q can store
+        int size = default(72);       // the number of flits the Q can store
         int maxVL;                    // Maximum VL we send on
     gates:
         input in;

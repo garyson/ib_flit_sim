@@ -29,6 +29,7 @@ module HCA
         int appCount;
 
         int srcLid;
+        int maxVL;
         @display("bgb=340,225;i=device/server2");
     gates:
         inout port;
@@ -42,6 +43,7 @@ module HCA
         }
         gen: IBGenerator {
             parameters:
+                maxVL = maxVL;
                 srcLid = srcLid;
                 @display("i=block/source;p=246,170");
             gates:
@@ -49,14 +51,17 @@ module HCA
         }
         sink: IBSink {
             parameters:
+                maxVL = maxVL;
                 @display("i=block/sink;p=248,74");
         }
         obuf: IBOutBuf {
             parameters:
+                maxVL = maxVL;
                 @display("i=block/queue;p=69,169");
         }
         ibuf: IBInBuf {
             parameters:
+                maxVL = maxVL;
                 isHcaIBuf = 1;
                 numPorts = 1;
                 @display("i=block/subqueue;p=69,74");

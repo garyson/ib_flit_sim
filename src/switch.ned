@@ -23,6 +23,7 @@ module SwitchPort
 {
     parameters:
         int numSwitchPorts;
+        int maxVL;
 
         @display("bgb=249,215");
     gates:
@@ -33,12 +34,14 @@ module SwitchPort
     submodules:
         obuf: IBOutBuf {
             parameters:
+                maxVL = maxVL;
                 @display("i=block/boundedqueue;p=76,80");
         }
         ibuf: IBInBuf {
             parameters:
                 isHcaIBuf = 0;
                 numPorts = numSwitchPorts;
+                maxVL = maxVL;
                 @display("i=block/subqueue;p=191,80");
             gates:
                 out[numSwitchPorts];
@@ -46,6 +49,7 @@ module SwitchPort
         }
         vlarb: IBVLArb {
             parameters:
+                maxVL = maxVL;
                 isHcaArbiter = 0;
                 numPorts = numSwitchPorts;
                 @display("p=191,156;i=block/dispatch");
@@ -79,9 +83,10 @@ module Switch
 {
     parameters:
         double numSwitchPorts;     // Total num of switch ports
-        double ISWDelay @unit(ns); // Delay brought by IBUF in SWitch
-        double VSWDelay @unit(ns); // Delay in ns brought by IBUF in SWitch
+        double ISWDelay @unit(ns) = default(50ns); // Delay brought by IBUF in SWitch
+        double VSWDelay @unit(ns) = default(50ns); // Delay in ns brought by IBUF in SWitch
         string pktFwdType;         // The type of the packet forwarding engine to use
+        int maxVL;
         @display("i=abstract/router");
     gates:
         inout port[];
@@ -93,6 +98,7 @@ module Switch
         }
         port[numSwitchPorts]: SwitchPort {
             parameters:
+                maxVL = maxVL;
                 numSwitchPorts = numSwitchPorts;
                 @display("p=90,44;b=48,32");
             gates:
