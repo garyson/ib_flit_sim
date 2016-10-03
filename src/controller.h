@@ -158,9 +158,7 @@ class Controller : public omnetpp::cSimpleModule
   void sendMessage(DimReqMsg *req, bool doDelay = false);
 
   // Initialize a new set of parameters for a new message
-  DimReqMsg *makeMessage(double timestamp, IB_MSGS msgType,
-                      unsigned int msgSrcLid, unsigned int msgDstLid,
-                      unsigned int msgLen_B, std::string dimemasName);
+  DimReqMsg *makeMessage(IB_MSGS msgType, std::string args);
 
   std::unique_ptr<DimReqMsg> lookupMessage(unsigned int msgId);
   void matchRReq(DimReqMsg *rreq);

@@ -159,11 +159,15 @@ message DimReqMsg extends cMessage
   simtime_t inject_time;
   unsigned int srcNode;
   unsigned int srcLid;
+  unsigned int srcApp;
   unsigned int msgId;    // unique identifier for the message per-sender app
   unsigned int dstNode;
   unsigned int dstLid;
+  unsigned int dstApp;
+  unsigned int mpiTag;
   unsigned int lenBytes;
-  string contextString;
+  uint64_t event_ptr;
+  uint64_t event_out_ptr;
 }
 
 message DimDoneMsg extends cMessage

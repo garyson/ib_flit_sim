@@ -50,19 +50,6 @@ Define_Module(Controller);
 
 namespace {
 using DimemasHandler = bool (Controller::*)(std::string);
-
-/* Trims whitespace from the beginning and end of the given string. */
-std::string
-trim_string(std::string in)
-{
-    const unsigned int size = in.size();
-    unsigned int f, l;
-    for (f = 0; f < size && std::isspace(in[f]); ++f) {
-    }
-    for (l = size - 1; l >= f && std::isspace(in[l]); --l) {
-    }
-    return in.substr(f, l - f + 1);
-}
 }
 
 // main init of the module
@@ -159,29 +146,7 @@ bool Controller::handleDimemasStop(std::string args)
 /** Handle a PROTO OK_TO_SEND message received from Dimemas. */
 bool Controller::handleDimemasRReq(std::string args)
 {
-    size_t index = 0;
-    double timestamp = std::stod(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int srcNode = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int dstNode = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    UNUSED unsigned int tag = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int msgSize = std::stoi(args, &index);
-    args = trim_string(args.substr(index));
-
-    // generate a new message
-    auto p_msg = makeMessage(timestamp, IB_DIM_RREQ_MSG, srcNode, dstNode,
-                             msgSize, args);
+    auto p_msg = makeMessage(IB_DIM_RREQ_MSG, args);
     sendMessage(p_msg);
 
     return true;
@@ -190,31 +155,11 @@ bool Controller::handleDimemasRReq(std::string args)
 /** Handle a PROTO READY_TO_RECV message received from Dimemas. */
 bool Controller::handleDimemasRTR(std::string args)
 {
-    size_t index = 0;
-    double timestamp = std::stod(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int srcNode = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int dstNode = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    UNUSED unsigned int tag = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int msgSize = std::stoi(args, &index);
-    args = trim_string(args.substr(index));
-
     // generate a new message
-    auto p_msg = makeMessage(timestamp, IB_DIM_RTR_MSG, dstNode, srcNode,
-                             msgSize, args);
+    auto p_msg = makeMessage(IB_DIM_RTR_MSG, args);
 
-    auto iter = rreqCount.find(make_pair(srcNode, dstNode));
+    auto iter = rreqCount.find(make_pair(p_msg->getSrcNode(),
+            p_msg->getDstNode()));
     if (iter != rreqCount.end() && iter->second > 0) {
         sendMessage(p_msg);
     } else {
@@ -227,30 +172,9 @@ bool Controller::handleDimemasRTR(std::string args)
 /** Handle a SEND message from Dimemas. */
 bool Controller::handleDimemasSend(std::string args)
 {
-    size_t index = 0;
-    double timestamp = std::stod(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int srcNode = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int dstNode = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    UNUSED unsigned int tag = std::stoi(args, &index);
-    args = args.substr(index);
-
-    index = 0;
-    unsigned int msgSize = std::stoi(args, &index);
-    args = trim_string(args.substr(index));
-
     // generate a new message
     ++eagerCount;
-    auto p_msg = makeMessage(timestamp, IB_DIM_SEND_MSG, srcNode, dstNode,
-                             msgSize, args);
+    auto p_msg = makeMessage(IB_DIM_SEND_MSG, args);
     sendMessage(p_msg, true);
 
     return true;
@@ -295,22 +219,70 @@ int Controller::getLid(unsigned int node)
 }
 
 /** Creates a message object given the parameters. */
-DimReqMsg *Controller::makeMessage(double timestamp, IB_MSGS msgType,
-                           unsigned int msgSrcNode, unsigned int msgDstNode,
-                           unsigned int msgLen_B, std::string dimemasName)
+DimReqMsg *Controller::makeMessage(IB_MSGS msgType, std::string args)
 {
-  DimReqMsg *p_msg;
+  DimReqMsg *p_msg = new DimReqMsg(nullptr, msgType);
   char name[128];
-  sprintf(name, "%s-%d-%d-%d", getFullPath().c_str(), msgSrcNode, this->msgIdx, msgDstNode);
-  p_msg = new DimReqMsg(name, msgType);
+  size_t index;
+
+  double timestamp = std::stod(args, &index);
+  args = args.substr(index);
+
+  if (msgType != IB_DIM_RTR_MSG) {
+    p_msg->setSrcNode(std::stoi(args, &index));
+    args = args.substr(index);
+
+    p_msg->setDstNode(std::stoi(args, &index));
+    args = args.substr(index);
+  } else {
+    p_msg->setDstNode(std::stoi(args, &index));
+    args = args.substr(index);
+
+    p_msg->setSrcNode(std::stoi(args, &index));
+    args = args.substr(index);
+  }
+
+  p_msg->setMpiTag(std::stoi(args, &index));
+  args = args.substr(index);
+
+  p_msg->setLenBytes(std::stoi(args, &index));
+  args = args.substr(index);
+
+  if (msgType != IB_DIM_RREQ_MSG) {
+    p_msg->setEvent_ptr(std::stoull(args, &index, 0));
+    args = args.substr(index);
+
+    p_msg->setEvent_out_ptr(std::stoull(args, &index, 0));
+    args = args.substr(index);
+
+    int dummy = std::stoi(args, &index, 0);
+    int node = (msgType == IB_DIM_RTR_MSG) ? p_msg->getDstNode() : p_msg->getSrcNode();
+    if (dummy != node) {
+      throw cRuntimeError("Got two src nodes: %d, %d", node, dummy);
+    }
+    args = args.substr(index);
+
+    dummy = std::stoi(args, &index, 0);
+    node = (msgType == IB_DIM_RTR_MSG) ? p_msg->getSrcNode() : p_msg->getDstNode();
+    if (dummy != node) {
+      throw cRuntimeError("Got two dst nodes: %d, %d", node, dummy);
+    }
+    args = args.substr(index);
+  }
+
+  p_msg->setSrcApp(std::stoi(args, &index));
+  args = args.substr(index);
+
+  p_msg->setDstApp(std::stoi(args, &index));
+  args = args.substr(index);
+
+  sprintf(name, "%s-%d-%d-%d", getFullPath().c_str(), p_msg->getSrcNode(),
+          this->msgIdx, p_msg->getDstNode());
+  p_msg->setName(name);
   p_msg->setInject_time(timestamp * timescale);
-  p_msg->setSrcNode(msgSrcNode);
-  p_msg->setSrcLid(getLid(msgSrcNode));
+  p_msg->setSrcLid(getLid(p_msg->getSrcNode()));
   p_msg->setMsgId(this->msgIdx);
-  p_msg->setDstNode(msgDstNode);
-  p_msg->setDstLid(getLid(msgDstNode));
-  p_msg->setLenBytes(msgLen_B);
-  p_msg->setContextString(dimemasName.c_str());
+  p_msg->setDstLid(getLid(p_msg->getDstNode()));
 
   this->active.insert(std::make_pair(this->msgIdx,
                                      std::unique_ptr<DimReqMsg>(p_msg)));
@@ -346,6 +318,10 @@ void Controller::matchRReq(DimReqMsg *rreq)
     } else {
         DimReqMsg *rtr = queue.front();
         queue.pop();
+        if (rtr->getKind() != IB_DIM_RTR_MSG) {
+            throw cRuntimeError("Incorrect message kind %d in RTR queue for (%d, %d)",
+                    rtr->getKind(), rreq->getSrcNode(), rreq->getDstNode());
+        }
         if (rtr->getInject_time() < simTime()) {
             rtr->setInject_time(simTime());
         }
@@ -357,10 +333,21 @@ void Controller::matchRReq(DimReqMsg *rreq)
  * destination.  Sends the message data. */
 void Controller::handleRTR(DimReqMsg *rtr)
 {
-    DimReqMsg *send = makeMessage(simTime().dbl(), IB_DIM_SEND_MSG,
-                                  rtr->getDstNode(), rtr->getSrcNode(),
-                                  rtr->getLenBytes(),
-                                  rtr->getContextString());
+    char name[128];
+    DimReqMsg *send = rtr->dup();
+    send->setSrcNode(rtr->getDstNode());
+    send->setSrcLid(getLid(send->getSrcNode()));
+    send->setDstNode(rtr->getSrcNode());
+    send->setDstLid(getLid(send->getDstNode()));
+    sprintf(name, "%s-%d-%d-%d", getFullPath().c_str(), send->getSrcNode(),
+            this->msgIdx, send->getDstNode());
+    send->setName(name);
+    send->setInject_time(simTime());
+    send->setKind(IB_DIM_SEND_MSG);
+    send->setMsgId(this->msgIdx++);
+    std::cerr << "Send real message at " << simTime() << '\n';
+    this->active.insert(std::make_pair(send->getMsgId(),
+                                         std::unique_ptr<DimReqMsg>(send)));
     sendMessage(send, true);
     ++rendezvousCount;
 }
@@ -370,20 +357,18 @@ void Controller::handleRTR(DimReqMsg *rtr)
 void Controller::handleSendCompletion(DimReqMsg *orig_msg,
                                       simtime_t when)
 {
-    std::string dimResponse{"COMPLETED SEND "};
-    dimResponse.append(std::to_string(when.inUnit(SIMTIME_NS)));
-    dimResponse.append(" ");
-    dimResponse.append(std::to_string(orig_msg->getSrcNode()));
-    dimResponse.append(" ");
-    dimResponse.append(std::to_string(orig_msg->getDstNode()));
-    dimResponse.append(" ");
-    dimResponse.append(std::to_string(orig_msg->getLenBytes()));
-    dimResponse.append(" ");
-    dimResponse.append(orig_msg->getContextString());
-    EV << "-I- " << getFullPath() << " Send to Dimemas: "
+    std::ostringstream buf;
+    buf << "COMPLETED SEND " << when.inUnit(SIMTIME_NS)
+        << " " << orig_msg->getSrcNode()
+        << " " << orig_msg->getDstNode()
+        << " " << orig_msg->getLenBytes()
+        << " " << std::hex << orig_msg->getEvent_ptr()
+        << " " << std::hex << orig_msg->getEvent_out_ptr();
+    std::string dimResponse = buf.str();
+    std::cerr << "-I- " << getFullPath() << " Send to Dimemas: "
             << dimResponse << '\n';
     sock->sendLine(dimResponse + "\n");
-    EV << "-I- " << getFullPath() << " Send to Dimemas: END\n";
+    std::cerr << "-I- " << getFullPath() << " Send to Dimemas: END\n";
     sock->sendLine("END\n");
 
     /* We are returning control to Dimemas *now*, so cancel the STOP that we
