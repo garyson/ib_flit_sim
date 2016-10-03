@@ -137,7 +137,7 @@ message IBDoneMsg extends cMessage
 
 // Applications sends this message that represent a transmission request to
 // one destination on some schedule queue
-message IBAppMsg extends cMessage
+message IBAppMsg extends cPacket
 {
   unsigned int appIdx;   // the application Idx in the SRC
   unsigned int msgIdx;   // the application message index (uniq per APP)

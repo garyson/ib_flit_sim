@@ -198,7 +198,6 @@ void IBGenerator::getNextAppMsg()
   sprintf(name, "data-%u-%u-%u-%u", srcLid, msgIdx, thisPktIdx, thisFlitIdx);
   p_cred = new IBDataMsg(name, IB_DATA_MSG);
   p_cred->setSrcLid(srcLid);
-  p_cred->setByteLength(flitSize_B);
   p_cred->setSendInline(p_msg->getLenBytes() < maxInlineData_B);
 
   p_cred->setDstLid(thisPktDst);
@@ -229,6 +228,13 @@ void IBGenerator::getNextAppMsg()
     p_cred->setPacketSn(0);
   }
 
+  if (thisFlitIdx + 1 == p_msg->getPktLenFlits()
+          && thisPktIdx + 1 == p_msg->getLenPkts()) {
+    p_cred->encapsulate(p_msg);
+  }
+
+  p_cred->setByteLength(flitSize_B);
+
   // now we have a new FLIT at hand we can either Q it or send it over
   // if there is a place for it in the VLA
   unsigned int vl = p_msg->getVL();
@@ -249,7 +255,7 @@ void IBGenerator::getNextAppMsg()
       // we are done with the app msg
       EV << "-I- " << getFullPath() << " completed appMsg:"
          << p_msg->getName() << endl;
-      send(p_msg, "in$o", curApp);
+      send(new cMessage(), "in$o", curApp);
       appMsgs[curApp] = NULL;
     } else {
       p_msg->setPktIdx(thisPktIdx);

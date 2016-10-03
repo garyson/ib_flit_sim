@@ -137,6 +137,9 @@ void IBSink::consumeDataMsg(IBDataMsg *p_msg)
   if (p_sentMsg->getWasLast()
           && p_msg->getMsgLen() == p_msg->getPktIdx() + 1
           && this->notifyOnDone) {
+      IBAppMsg *appMsg = check_and_cast<IBAppMsg *>(p_msg->decapsulate());
+      delete appMsg;
+
       /* Tell the controller that we sent this message so that he can inform
        * Dimemas */
       char nameBuf[128];
