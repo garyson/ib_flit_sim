@@ -29,6 +29,7 @@ else
     tmux attach-session -t omnet-run
 fi
 prv_get_durations.sh predicted-${NETWORK}.prv
+rm -r ${PWD}/results-${NETWORK}
 mv ${PWD}/results ${PWD}/results-${NETWORK}
 
 echo "+++ $(date) co-simulation run is complete"
