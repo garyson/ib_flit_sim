@@ -25,7 +25,7 @@ include /home/pmacarth/src/omnetpp-workspace/ib_model/networks/pcie_8x_g3.ini
 **.speed = 14Gbps
 **.maxVL = 0 # note that maxvl is the max value of the VL not num
 
-**.perMsgDelay = 1200ns
+**.perMsgDelay = 1300ns
 **.inlineMsgDelay = 800ns
 
 ##################################################################
@@ -103,7 +103,7 @@ include /home/pmacarth/src/omnetpp-workspace/ib_model/networks/pcie_8x_g3.ini
 # not relevant for param mode but still required
 **.msgLenSet = "1152 2048 4096"
 **.msgLenProb = "1 1 1 1"
-**app[*].msg2msgGap = 50ns
+**app[*].msg2msgGap = 0ns
 **.initialDelay = 0ns
 
 # Others:
@@ -115,9 +115,9 @@ include /home/pmacarth/src/omnetpp-workspace/ib_model/networks/pcie_8x_g3.ini
 **.maxContPkts = 10
 **.popDlyPerByte = 0ns
 **.maxQueuedPerVL = 4
-**.flit2FlitGap = 33ns
+**.flit2FlitGap = 35ns
 **.pkt2PktGap = 50ns
-**.maxInlineData = 256B
+**.maxInlineData = 64B
 
 ##################################################################
 # SWITCH
