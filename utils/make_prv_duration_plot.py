@@ -59,8 +59,8 @@ def load_data_frame(inf):
     print(inf + ':')
     grouped = filtered.groupby(col_size, as_index=False)
     print(grouped.describe())
-    means = grouped.min()
-    #means = grouped.aggregate(lambda x : trim_mean(x, .05))
+    #means = grouped.min()
+    means = grouped.aggregate(lambda x : trim_mean(x, .05))
     errs = grouped.sem()
     print(grouped.quantile(0.75)[col_duration] -
             grouped.quantile(0.25)[col_duration])
