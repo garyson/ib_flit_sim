@@ -60,21 +60,37 @@ message IBWireMsg extends cPacket
 message IBDataMsg extends IBWireMsg
 {
   int appIdx;           // the application index within the SRC
+                        //# used by IBGen, IBSink
   int msgIdx;           // a message ID unique to the SRC
+                        //# used by IBGen, IBSink
   int msgLen;           // number of packets in the msg
+                        //# used by IBSink
   int pktIdx;           // packet index within the message
+                        //# used by IBGen, IBSink
   int packetId;         // globally unique packet ID
+                        //# used by IBInBuf
   int packetSn;         // serial number of packet by the source to this dst
+                        //# used by IBSink
   int flitSn;           // serial number with the flit: 0..N
+                        //# used by IBGen, IBInBuf, IBOutBuf, IBSink, IBVLArb
   int PacketLength;     // Total number of credits in this packet.
+                        //# used by IBOutBuf, IBSink, IBVLArb
   int dstLid;           // target LID
+                        //# used by IBInBuf, IBSink
   int srcLid;           // source LID
+                        //# used by IBInBuf, IBOutBuf, IBSink
   int SL;               // the SL
+                        //# not used
   simtime_t SwTimeStamp;// Time stamp set when credit gets in IBRX
+                        //# set in IBInBuf, used by IBVLArb
   simtime_t injectionTime; // the time the credit hit the wire
+                           //# used by IBSink
   bool beforeAnySwitch; // set to true by HCA and then to false by the first switch - to identify loops
+                        //# used by IBInBuf
   bool sendInline;      // set to true if sent inline (no PCIe overhead on send)
+                        //# used internally by IBGen
 }
+
 
 message IBFlowControl extends IBWireMsg
 {
