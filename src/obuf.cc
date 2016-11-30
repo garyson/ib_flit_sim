@@ -34,8 +34,6 @@ void IBOutBuf::initialize()
 
   Enabled = par("enabled");
 
-  credMinTime_us = par("credMinTime");
-
   // Initiazlize the statistical collection elements
   qDepthHist.setName("Queue Usage");
   qDepthHist.setRangeAutoUpper(0, 10, 1);
@@ -49,15 +47,11 @@ void IBOutBuf::initialize()
   firstPktSendTime = 0;
   flitsSources.setName("Flits Sources");
 
-  // 4x 2.5Gbps = 1Byte/nsec ; but we need the 10/2.5/4.0 ...
-  WATCH(credMinTime_us);
-
   p_popMsg = new cMessage("pop", IB_POP_MSG);;
 
   // queue is empty
   prevPop = IBPopType::NONE;
   prevFCTime = 0;
-  isMinTimeUpdate = 0;
   pendingFreeCount = 0;
 
   for ( int i = 0; i < maxVL+1; i++ ) {
@@ -73,12 +67,9 @@ void IBOutBuf::initialize()
   WATCH_VECTOR(FCCL);
 
   if (Enabled) {
-    // we do want to have a continous flow of MinTime
-    p_minTimeMsg = new cMessage("minTime", IB_MINTIME_MSG);
-
-    // Send the first mintime immediately so that all is initialised
+    // Send the first pop immediately so that all is initialised
     // when we get first packets
-    scheduleAt(simTime() , p_minTimeMsg);
+    scheduleAt(simTime() , p_popMsg);
   } else {
     ev << "-I- " << getFullPath() << " port DISABLED " << endl;
   }
@@ -170,11 +161,11 @@ int IBOutBuf::sendFlowControl()
   int sentUpdate = 0;
 
   // we should not continue if the Q is not empty if we aren't in mintime mode
-  if (! isMinTimeUpdate && ! queue.empty())
+  if (! queue.empty())
     return(0);
 
   if (curFlowCtrVL >= maxVL+1) {
-    return(0);
+    curFlowCtrVL = 0;
   }
 
   for (; (sentUpdate == 0) && (curFlowCtrVL < maxVL+1); curFlowCtrVL++ ) {
@@ -209,10 +200,6 @@ int IBOutBuf::sendFlowControl()
       sendOutMessage(p_msg);
       sentUpdate = 1;
     }
-
-    // last VL zeros the min time update flag only if there are no mgt messages
-    if ( (curFlowCtrVL == maxVL+1) )
-      isMinTimeUpdate = 0;
   }
 
   return(sentUpdate);
@@ -280,30 +267,16 @@ void IBOutBuf::handlePop()
   qDepth.record(queue.length());
 } // handlePop
 
-// Handle MinTime:
-// If the prev sent VL Credits are no longer valid send push an update
-void IBOutBuf::handleMinTime()
-{
-  EV << "-I- " << getFullPath() << " handling MinTime event" << endl;
-  curFlowCtrVL = 0;
-  isMinTimeUpdate = 1;
-  // if we do not have any pop message - we need to create one immediatly
-  if (! p_popMsg->isScheduled() ) {
-    scheduleAt(simTime() + 1e-9, p_popMsg);
-  }
-
-  // we use the min time to collect Queue depth stats:
-  qDepthHist.collect( queue.length() );
-
-  scheduleAt(simTime() + credMinTime_us*1e-6, p_minTimeMsg);
-} // handleMinTime
-
 // Handle rxCred
 void IBOutBuf::handleRxCred(IBRxCredMsg *p_msg)
 {
   // update FCCL...
   FCCL[p_msg->getVL()] = p_msg->getFCCL();
   delete p_msg;
+
+  if (!p_popMsg->isScheduled()) {
+      handlePop();
+  }
 }
 
 void IBOutBuf::handleMessage(cMessage *p_msg)
@@ -311,8 +284,6 @@ void IBOutBuf::handleMessage(cMessage *p_msg)
   int msgType = p_msg->getKind();
   if ( msgType == IB_POP_MSG ) {
     handlePop();
-  } else if ( msgType == IB_MINTIME_MSG ) {
-    handleMinTime();
   } else if ( msgType == IB_DATA_MSG ) {
     qMessage((IBDataMsg*)p_msg);
   } else if ( msgType == IB_RXCRED_MSG ) {

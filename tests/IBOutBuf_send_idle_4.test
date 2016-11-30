@@ -4,7 +4,6 @@ virtual lane when it gets out of order credit updates in the idle state.
 
 %inifile: omnetpp.ini
 
-Test.obuf.credMinTime = 0.256us
 Test.obuf.size = 36
 Test.obuf.width = 4
 Test.obuf.maxVL = 1

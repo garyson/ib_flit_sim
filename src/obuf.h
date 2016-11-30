@@ -73,16 +73,13 @@ class IBOutBuf : public cSimpleModule
 {
  private:
   cMessage *p_popMsg;
-  cMessage *p_minTimeMsg;
 
   // parameters:
-  double credMinTime_us; // time between VL update and injection of an update
   int    qSize;          // Max number of FLITs the Q can handle
   int    maxVL;          // Maximum VL supported by this port
 
   // data strcture
   int curFlowCtrVL;    // The VL to sent FC on. If == 8 loop back to 0
-  int isMinTimeUpdate; // set by minTime event. flag updates caused by minTime
   bool Enabled;        // Is this port enabled or is it part of a 8x/12x
   cQueue queue;             // holds the outstanding data
   int numDataCreditsQueued; // needed to make sure we do not overflow the qSize
@@ -99,7 +96,6 @@ class IBOutBuf : public cSimpleModule
   void qMessage(IBDataMsg *p_msg);
   int  sendFlowControl();
   void handlePop();
-  void handleMinTime();
   void handleRxCred(IBRxCredMsg *p_msg);
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
