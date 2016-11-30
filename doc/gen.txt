@@ -37,12 +37,12 @@ TRF_FLOOD: In flood mode the generator keeps all VLs with at
            the Generator simulates real packet insertion flow.
 TRF_UNI: In Uniform mode, packets are send in burts with delay between
          packets and between bursts. We can chose  numbers of bursts,
-			number of packets per burst, etc... In this case the simulator
+         number of packets per burst, etc... In this case the simulator
          simulates real packet insertion flow
 TRF_MIXLEN: Same as TRF_UNI but in this case the packet lenth in bytes is
-				given by a distribution as follows: PktLenDist is a vector with
-				the length of packets we are covering PktLenProb is the
-				probability related to each of the Length in PktLenDist
+            given by a distribution as follows: PktLenDist is a vector with
+            the length of packets we are covering PktLenProb is the
+            probability related to each of the Length in PktLenDist
 
 The generator also supports multiple traffic distribution modes:
 DST_BY_PARAM: The parameter dstLid is evaluated to select the dstination LID
@@ -50,7 +50,7 @@ DST_SEQ_ONCE: Sequence of destination LIDs is provided. Sequence is sent once.
 DST_SEQ_LOOP: Sequence of destination LIDs is provided. Sequence looped
 DST_RANDOM: Completelly random selection of target LID
 DST_HOT_SPOT: Sends bursts of traffic to a particular LID and randomize
-				  the rest
+              the rest
 
 
 PARAMETERS:
@@ -67,7 +67,7 @@ packetlength: Length of packet in credit
 msgLengthInMTUs: Total message length in credits
 
 trafficDist: Selects the traffic injection mode from "trfFlood",
-				 "trfUniform", "trfLengthMix"
+             "trfUniform", "trfLengthMix"
 
 TRF_FLOOD mode parameters:
 floodVLs: list fo VLs to flood
@@ -85,7 +85,7 @@ PktLenProb: Probability (in %) of corresp. PktLen defined in PktLenDist
 
 Destination LID selection parameters:
 dstSeqMode: Selects the mode from: "dstLid", "dstSeqOnce", "dstSeqLoop",
-				"dstRandom", "dstHotSpot"
+            "dstRandom", "dstHotSpot"
 
 Parameters for "dstLid" mode:
 dstLid: the destination LID to sent to if not in sequence modes

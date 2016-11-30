@@ -39,21 +39,21 @@ state of number of free credits is provided to the TX side too.
 
 PARAMETERS:
 
-width :       	  input line width 4x,8x,12x
-isHcaIBuf : 	  if 1 means the input buffer is part
+width :          input line width 4x,8x,12x
+isHcaIBuf :      if 1 means the input buffer is part
                  of HCA and no routing done.
-numPorts : 		  number of output ports to drive to
+numPorts :       number of output ports to drive to
 maxBeingSent :   max number of parallel
                  sends = switch "speed-up"
 totalBufferSize :the total buffer size in credits
-maxVL : 			  max VL num. If only VL0 value is 0
+maxVL :          max VL num. If only VL0 value is 0
 
-maxStatic0 : 	  Max num of credits reserved for VL0
-maxStatic1 : 	  Max num of credits reserved for VL1
-maxStatic2 : 	  Max num of credits reserved for VL2
-maxStatic3 : 	  Max num of credits reserved for VL3
-maxStatic4 : 	  Max num of credits reserved for VL4
-maxStatic5 : 	  Max num of credits reserved for VL5
-maxStatic6 : 	  Max num of credits reserved for VL6
-maxStatic7 : 	  Max num of credits reserved for VL7
+maxStatic0 :     Max num of credits reserved for VL0
+maxStatic1 :     Max num of credits reserved for VL1
+maxStatic2 :     Max num of credits reserved for VL2
+maxStatic3 :     Max num of credits reserved for VL3
+maxStatic4 :     Max num of credits reserved for VL4
+maxStatic5 :     Max num of credits reserved for VL5
+maxStatic6 :     Max num of credits reserved for VL6
+maxStatic7 :     Max num of credits reserved for VL7
 recordVectors:   control recording of output vectors

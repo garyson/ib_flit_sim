@@ -94,7 +94,8 @@ class IBOutBuf : public cSimpleModule
   void handleRxCred(IBRxCredMsg *p_msg);
   virtual void initialize();
   virtual void handleMessage(cMessage *msg);
-  virtual void finish();protected:
+  virtual void finish();
+protected:
   virtual ~IBOutBuf();
 
   // statistics
@@ -106,17 +107,17 @@ class IBOutBuf : public cSimpleModule
 
   simtime_t firstPktSendTime; // the first send time
   unsigned int totalBytesSent; // total number of bytes sent
-  cStdDev	flitsSources; // track flit source for Fair Share
+  cStdDev flitsSources; // track flit source for Fair Share
 
 public:
    // used by the VLA to validate the last arbitration
    int  getNumFreeCredits() {
-	  return(qSize - queue.length());
+      return(qSize - queue.length());
    };
 
    // used by VLA to know how many data packets were already sent
    int getFCTBS(int vl) {
-	  return(FCTBS[vl]);
+      return(FCTBS[vl]);
    };
 
    // send or queue a message about port utilization into the obuf

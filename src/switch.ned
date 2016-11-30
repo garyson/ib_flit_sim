@@ -26,9 +26,9 @@ module SwitchPort
 
         @display("bgb=249,215");
     gates:
-        inout port;				// port to outside the switch
-        inout sw_port[];		// inner switch port (between SwitchPorts)
-        inout sw_sent_port[];	// inner sent msgs ports
+        inout port;            // port to outside the switch
+        inout sw_port[];      // inner switch port (between SwitchPorts)
+        inout sw_sent_port[];   // inner sent msgs ports
 
     submodules:
         obuf: IBOutBuf {
@@ -81,7 +81,7 @@ module Switch
         double numSwitchPorts;     // Total num of switch ports
         double ISWDelay @unit(ns); // Delay brought by IBUF in SWitch
         double VSWDelay @unit(ns); // Delay in ns brought by IBUF in SWitch
-		  string pktFwdType;         // The type of the packet forwarding engine to use
+        string pktFwdType;         // The type of the packet forwarding engine to use
         @display("i=abstract/router");
     gates:
         inout port[];

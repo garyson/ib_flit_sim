@@ -25,11 +25,11 @@ package ib_model;
 simple IBOutBuf
 {
     parameters:
-		  bool enabled = default(true); // set to false to turn OFF the link
+        bool enabled = default(true); // set to false to turn OFF the link
         double size;                  // the number of flits the Q can store
         int maxVL;                    // Maximum VL we send on
         double credMinTime @unit(us); // time between VL Credit packets
-						  // NOTE: need to adjust if width change
+                    // NOTE: need to adjust if width change
     gates:
         input in;
         input rxCred;

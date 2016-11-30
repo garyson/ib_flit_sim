@@ -287,10 +287,10 @@ int IBVLArb::isValidArbitration(unsigned int portNum, unsigned int vl,
 // transmission. return 1 if found
 int
 IBVLArb::roundRobinNextRQForVL(int numCredits, unsigned int curPortNum, short int vl,
-							   int &nextPortNum)
+                               int &nextPortNum)
 {
-	IBDataMsg *p_flit;
-	// start with the next port to the last one we sent
+    IBDataMsg *p_flit;
+    // start with the next port to the last one we sent
     for (unsigned int pn = 1; pn <= numInPorts; pn++) {
       unsigned int portNum = (curPortNum + pn) % numInPorts;
       p_flit = inPktHoqPerVL[portNum][vl];
@@ -308,8 +308,8 @@ IBVLArb::roundRobinNextRQForVL(int numCredits, unsigned int curPortNum, short in
       } else {
         // so can we send it?
         if (p_flit->getPacketLength() <= numCredits) {
-	nextPortNum = portNum;
-	return(1);
+          nextPortNum = portNum;
+          return(1);
         } else {
           EV << "-I- " << getFullPath() << " not enough credits available:"
              << numCredits << " < " << p_flit->getPacketLength()
@@ -326,14 +326,14 @@ IBVLArb::roundRobinNextRQForVL(int numCredits, unsigned int curPortNum, short in
 // transmission. return 1 if found
 int
 IBVLArb::firstComeFirstServeNextRQForVL(int numCredits, unsigned int curPortNum, short int vl,
-							   int &nextPortNum)
+                                        int &nextPortNum)
 {
-	IBDataMsg *p_flit;
-	IBDataMsg *p_oldestFlit = NULL;
-	simtime_t oldestFlitTime;
-	int oldestPortNum;
+    IBDataMsg *p_flit;
+    IBDataMsg *p_oldestFlit = NULL;
+    simtime_t oldestFlitTime;
+    int oldestPortNum;
 
-	// start with the next port to the last one we sent
+    // start with the next port to the last one we sent
     for (unsigned int pn = 1; pn <= numInPorts; pn++) {
       unsigned int portNum = (curPortNum + pn) % numInPorts;
       p_flit = inPktHoqPerVL[portNum][vl];
@@ -349,13 +349,13 @@ IBVLArb::firstComeFirstServeNextRQForVL(int numCredits, unsigned int curPortNum,
            << p_flit->getName() << " on port:" << portNum
            << " vl:" << vl << endl;
       } else {
-	  simtime_t thisFlitTime = p_flit->getSwTimeStamp();
-	  // now look for the oldest
-	  if (!p_oldestFlit || oldestFlitTime > thisFlitTime) {
-		  p_oldestFlit = p_flit;
-		  oldestFlitTime = thisFlitTime;
-		  oldestPortNum = portNum;
-	  }
+        simtime_t thisFlitTime = p_flit->getSwTimeStamp();
+        // now look for the oldest
+        if (!p_oldestFlit || oldestFlitTime > thisFlitTime) {
+          p_oldestFlit = p_flit;
+          oldestFlitTime = thisFlitTime;
+          oldestPortNum = portNum;
+        }
       }
     }
 
@@ -363,8 +363,8 @@ IBVLArb::firstComeFirstServeNextRQForVL(int numCredits, unsigned int curPortNum,
 
     // so can we send it?
     if (p_oldestFlit->getPacketLength() <= numCredits) {
-	nextPortNum = oldestPortNum;
-	return(1);
+      nextPortNum = oldestPortNum;
+      return(1);
     } else {
       EV << "-I- " << getFullPath() << " not enough credits available:"
          << numCredits << " < " << p_oldestFlit->getPacketLength()
@@ -410,9 +410,9 @@ IBVLArb::findNextSend( unsigned int &curIdx, ArbTableEntry *Tbl,
     numCredits = FCCL[vl] - FCTBS[vl];
 
     if (useFCFSRQArb)
-	found = firstComeFirstServeNextRQForVL(numCredits, curPortNum, vl, portNum);
+      found = firstComeFirstServeNextRQForVL(numCredits, curPortNum, vl, portNum);
     else
-	found = roundRobinNextRQForVL(numCredits, curPortNum, vl, portNum);
+      found = roundRobinNextRQForVL(numCredits, curPortNum, vl, portNum);
     if (found)  {
       curIdx = idx;
       curPortNum = portNum;
@@ -817,5 +817,5 @@ void IBVLArb::finish()
 }
 
 IBVLArb::~IBVLArb() {
-	if (p_popMsg) cancelAndDelete(p_popMsg);
+  if (p_popMsg) cancelAndDelete(p_popMsg);
 }

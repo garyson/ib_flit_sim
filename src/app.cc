@@ -124,12 +124,12 @@ void IBApp::initialize(){
 
   // if we are in param mode we may be getting a 0 as DST and thus keep quite
   if (msgDstMode == DST_PARAM) {
-	  int dstLid = par("dstLid");
-	  if (dstLid)
-		  scheduleAt(simTime(), new cMessage);
+    int dstLid = par("dstLid");
+    if (dstLid)
+      scheduleAt(simTime(), new cMessage);
   } else {
-	  // Emulate a "done"
-	  scheduleAt(simTime(), new cMessage);
+    // Emulate a "done"
+    scheduleAt(simTime(), new cMessage);
   }
 
 }

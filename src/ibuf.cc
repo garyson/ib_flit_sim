@@ -156,9 +156,9 @@ void IBInBuf::sendRxCred(int vl, double delay = 0)
   IBRxCredMsg *p_msg = new IBRxCredMsg("rxCred", IB_RXCRED_MSG);
   p_msg->setVL(vl);
   if (!lossyMode) {
-	 p_msg->setFCCL(ABR[vl] + staticFree[vl]);
+    p_msg->setFCCL(ABR[vl] + staticFree[vl]);
   } else {
-	 p_msg->setFCCL(ABR[vl] + maxStatic[vl]);
+    p_msg->setFCCL(ABR[vl] + maxStatic[vl]);
   }
 
   if (delay)
@@ -277,45 +277,45 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
       }
 
       // do we have enough credits?
-		if (!lossyMode) {
-		  if (curPacketCredits > staticFree[curPacketVL]) {
-			 opp_error(" Credits overflow. Required: %d available: %d",
-						  curPacketCredits, staticFree[curPacketVL]);
-		  }
-		} else {
-		  // we need to mark out port as -1 to make next flits drop
-		  if (curPacketCredits > staticFree[curPacketVL]) {
-			 curPacketOutPort = -1;
-			 numDroppedCredits += curPacketCredits;
-			 delete p_msg;
-			 return;
-		  }
-		}
+      if (!lossyMode) {
+        if (curPacketCredits > staticFree[curPacketVL]) {
+          opp_error(" Credits overflow. Required: %d available: %d",
+                    curPacketCredits, staticFree[curPacketVL]);
+        }
+      } else {
+        // we need to mark out port as -1 to make next flits drop
+        if (curPacketCredits > staticFree[curPacketVL]) {
+          curPacketOutPort = -1;
+          numDroppedCredits += curPacketCredits;
+          delete p_msg;
+          return;
+        }
+      }
 
       // lookup out port  on the first credit of a packet
       if (numPorts > 1) {
-	  if (!hcaIBuf) {
-		  curPacketOutPort = pktfwd->getPortByLID(dLid);
-			  if (!p_dataMsg->getBeforeAnySwitch() &&
-					(curPacketOutPort == (int)thisPortNum)) {
-				 opp_error("loopback ! packet %s from lid:%d to dlid %d is sent back throgh port: %d ",
-							  p_dataMsg->getName(),
-							  p_dataMsg->getSrcLid(),
-							  p_dataMsg->getDstLid(),
-							  curPacketOutPort);
-			  }
-	  } else {
-		  curPacketOutPort = 0;
-	  }
+        if (!hcaIBuf) {
+           curPacketOutPort = pktfwd->getPortByLID(dLid);
+           if (!p_dataMsg->getBeforeAnySwitch() &&
+               (curPacketOutPort == (int)thisPortNum)) {
+             opp_error("loopback ! packet %s from lid:%d to dlid %d is sent back throgh port: %d ",
+                       p_dataMsg->getName(),
+                       p_dataMsg->getSrcLid(),
+                       p_dataMsg->getDstLid(),
+                       curPacketOutPort);
+           }
+        } else {
+          curPacketOutPort = 0;
+        }
 
-		  // this is an error flow we need to pass the current message
-		  // to /dev/null
-	  if (curPacketOutPort < 0) {
-		  curPacketOutPort = -1;
-	  } else {
-		  // get the current inbuf index in the switch
-		  pktfwd->repQueuedFlits(thisPortNum, curPacketOutPort, p_dataMsg->getDstLid(), curPacketCredits);
-	  }
+        // this is an error flow we need to pass the current message
+        // to /dev/null
+        if (curPacketOutPort < 0) {
+          curPacketOutPort = -1;
+        } else {
+          // get the current inbuf index in the switch
+          pktfwd->repQueuedFlits(thisPortNum, curPacketOutPort, p_dataMsg->getDstLid(), curPacketCredits);
+        }
       } else {
         curPacketOutPort = 0;
       }
@@ -333,9 +333,9 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
       }
     }
 
-	 // mark the packet as after first switch
-	 if (!hcaIBuf)
-		p_dataMsg->setBeforeAnySwitch(false);
+    // mark the packet as after first switch
+    if (!hcaIBuf)
+      p_dataMsg->setBeforeAnySwitch(false);
 
     // check out port is valid
     if ((curPacketOutPort < 0) ||  (curPacketOutPort >= (int)numPorts) ) {
@@ -346,7 +346,7 @@ void IBInBuf::handlePush(IBWireMsg *p_msg)
     }
 
     // Now consume a credit
-	 staticFree[curPacketVL]--;
+    staticFree[curPacketVL]--;
     staticUsageHist[curPacketVL].collect(staticFree[curPacketVL]);
     ABR[curPacketVL]++;
     EV << "-I- " << getFullPath() << " New Static ABR["
@@ -406,9 +406,9 @@ void IBInBuf::handleSent(IBSentMsg *p_msg)
 
   // Only on switch ibuf we need to do the following...
   if (! hcaIBuf) {
-	// update the outstanding flits for this out-port
-	// HACK: assume the port index is the port num that is switch connectivity is N x N following port idx
-	pktfwd->repQueuedFlits(thisPortNum, p_msg->getArrivalGate()->getIndex(), 0, -1);
+   // update the outstanding flits for this out-port
+   // HACK: assume the port index is the port num that is switch connectivity is N x N following port idx
+   pktfwd->repQueuedFlits(thisPortNum, p_msg->getArrivalGate()->getIndex(), 0, -1);
 
     // if this was the last message we need to schedule a "done"
     // on each of the output ports
@@ -444,16 +444,16 @@ void IBInBuf::handleSent(IBSentMsg *p_msg)
 
 void IBInBuf::handleTQLoadMsg(IBTQLoadUpdateMsg *p_msg)
 {
-	if (!hcaIBuf) {
-		unsigned int firstLid = p_msg->getFirstLid();
-		unsigned int lastLid = p_msg->getLastLid();
-		unsigned int srcRank = p_msg->getSrcRank();
-		int load= p_msg->getLoad();
-		delete p_msg;
-		pktfwd->handleTQLoadMsg(getParentModule()->getIndex(), srcRank, firstLid, lastLid, load);
-	} else {
-		delete p_msg;
-	}
+   if (!hcaIBuf) {
+      unsigned int firstLid = p_msg->getFirstLid();
+      unsigned int lastLid = p_msg->getLastLid();
+      unsigned int srcRank = p_msg->getSrcRank();
+      int load= p_msg->getLoad();
+      delete p_msg;
+      pktfwd->handleTQLoadMsg(getParentModule()->getIndex(), srcRank, firstLid, lastLid, load);
+   } else {
+      delete p_msg;
+   }
 }
 
 void IBInBuf::handleMessage(cMessage *p_msg)
@@ -486,5 +486,5 @@ void IBInBuf::finish()
              << endl;
   }
   if (lossyMode)
-	 recordScalar("numDroppedCredits", numDroppedCredits);
+    recordScalar("numDroppedCredits", numDroppedCredits);
 }

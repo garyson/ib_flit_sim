@@ -210,16 +210,16 @@ void IBGenerator::getNextAppMsg()
 
   // provide serial number to packet head flits
   if (thisFlitIdx == 0) {
-	  unsigned int dstPktSn = 0;
-	  if (lastPktSnPerDst.find(thisPktDst) == lastPktSnPerDst.end()) {
-		  dstPktSn = 1;
-		  lastPktSnPerDst[thisPktDst] = dstPktSn;
-	  } else {
-		  dstPktSn = ++lastPktSnPerDst[thisPktDst];
-	  }
-	  p_cred->setPacketSn(dstPktSn);
+    unsigned int dstPktSn = 0;
+    if (lastPktSnPerDst.find(thisPktDst) == lastPktSnPerDst.end()) {
+      dstPktSn = 1;
+      lastPktSnPerDst[thisPktDst] = dstPktSn;
+    } else {
+      dstPktSn = ++lastPktSnPerDst[thisPktDst];
+    }
+    p_cred->setPacketSn(dstPktSn);
   } else {
-	  p_cred->setPacketSn(0);
+    p_cred->setPacketSn(0);
   }
 
   // now we have a new FLIT at hand we can either Q it or send it over

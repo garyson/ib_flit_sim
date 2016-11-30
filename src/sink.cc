@@ -95,14 +95,14 @@ void IBSink::consumeDataMsg(IBDataMsg *p_msg)
 
   // track the time this flit waited in the HCA
   if (simTime() > startStatCol_sec) {
-	 simtime_t d = lastConsumedPakcet - p_msg->getTimestamp();
-	 waitStats.collect( d );
+    simtime_t d = lastConsumedPakcet - p_msg->getTimestamp();
+    waitStats.collect( d );
 
-	 // track the time this flit spent on the wire...
-	 if (p_msg->getFlitSn() == (p_msg->getPacketLength() -1)) {
-		d = simTime() - p_msg->getTimestamp();
-		PakcetFabricTime.collect( d );
-	 }
+    // track the time this flit spent on the wire...
+    if (p_msg->getFlitSn() == (p_msg->getPacketLength() -1)) {
+      d = simTime() - p_msg->getTimestamp();
+      PakcetFabricTime.collect( d );
+    }
   }
 
   int vl = p_msg->getVL();
@@ -121,42 +121,42 @@ void IBSink::handleData(IBDataMsg *p_msg)
 
   // make sure was correctly received (no routing bug)
   if (p_msg->getDstLid() != (int)lid) {
-	  opp_error("-E- Received packet to %d while self lid is %d",
-			  p_msg->getDstLid() , lid);
+    opp_error("-E- Received packet to %d while self lid is %d",
+              p_msg->getDstLid() , lid);
   }
 
   // for head of packet calculate out of order
   if (p_msg->getFlitSn() == 0) {
-	  unsigned int srcLid = p_msg->getSrcLid();
-	  unsigned int srcPktSn = p_msg->getPacketSn();
-	 if (lastPktSnPerSrc.find(srcLid) != lastPktSnPerSrc.end()) {
-		  unsigned int curSn = lastPktSnPerSrc[srcLid];
-		  if (srcPktSn == 1+curSn) {
-			  // OK case
-			  lastPktSnPerSrc[srcLid]++;
-			  totIOPackets++;
-		  } else if (srcPktSn < curSn) {
-			  // We do not count tail as OOO
-		  } else if (srcPktSn > 1+curSn) {
-			  // OOO was received
-			  totOOOPackets++;
-			  totOOPackets += srcPktSn - curSn;
-			  oooPackets.record(totOOOPackets);
-			  lastPktSnPerSrc[srcLid] = srcPktSn;
-			  oooWindow.collect(srcPktSn-curSn);
-		  } else if (srcPktSn == curSn) {
-			  // this is a BUG!
-			  opp_error("-E- Received packet to %d from %d with PacketSn %d equal to previous Sn",
-					  p_msg->getDstLid() , srcLid, srcPktSn);
-		  } else {
-			  // Could not get here - A bug
-			  opp_error("BUG: IBSink::handleData unexpected relation of curSn %d and PacketSn %d",
-					  curSn, srcPktSn);
-		 }
-	 } else {
-		 lastPktSnPerSrc[srcLid] = srcPktSn;
-		 totIOPackets++;
-	 }
+    unsigned int srcLid = p_msg->getSrcLid();
+    unsigned int srcPktSn = p_msg->getPacketSn();
+    if (lastPktSnPerSrc.find(srcLid) != lastPktSnPerSrc.end()) {
+      unsigned int curSn = lastPktSnPerSrc[srcLid];
+      if (srcPktSn == 1+curSn) {
+        // OK case
+        lastPktSnPerSrc[srcLid]++;
+        totIOPackets++;
+      } else if (srcPktSn < curSn) {
+        // We do not count tail as OOO
+      } else if (srcPktSn > 1+curSn) {
+        // OOO was received
+        totOOOPackets++;
+        totOOPackets += srcPktSn - curSn;
+        oooPackets.record(totOOOPackets);
+        lastPktSnPerSrc[srcLid] = srcPktSn;
+        oooWindow.collect(srcPktSn-curSn);
+      } else if (srcPktSn == curSn) {
+        // this is a BUG!
+        opp_error("-E- Received packet to %d from %d with PacketSn %d equal to previous Sn",
+            p_msg->getDstLid() , srcLid, srcPktSn);
+      } else {
+        // Could not get here - A bug
+        opp_error("BUG: IBSink::handleData unexpected relation of curSn %d and PacketSn %d",
+            curSn, srcPktSn);
+      }
+    } else {
+       lastPktSnPerSrc[srcLid] = srcPktSn;
+       totIOPackets++;
+    }
   }
 
   // calculate message latency - we track the "first" N packets of the message
@@ -165,58 +165,58 @@ void IBSink::handleData(IBDataMsg *p_msg)
 
   // for first flits
   if (p_msg->getFlitSn() == 0) {
-	  MsgTupple mt(p_msg->getSrcLid(), p_msg->getAppIdx(), p_msg->getMsgIdx());
-	  mI = outstandingMsgsData.find(mt);
-	  if (mI == outstandingMsgsData.end()) {
-		  EV << "-I- " << getFullPath() << " received first flit of new message from src: "
-			 <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
-		  outstandingMsgsData[mt].firstFlitTime = p_msg->getInjectionTime();
-	  }
+    MsgTupple mt(p_msg->getSrcLid(), p_msg->getAppIdx(), p_msg->getMsgIdx());
+    mI = outstandingMsgsData.find(mt);
+    if (mI == outstandingMsgsData.end()) {
+      EV << "-I- " << getFullPath() << " received first flit of new message from src: "
+       <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
+      outstandingMsgsData[mt].firstFlitTime = p_msg->getInjectionTime();
+    }
 
-	  // first flit of the last packet
-	  if (outstandingMsgsData[mt].numPktsReceived + 1 == (unsigned int)p_msg->getMsgLen()) {
-	    double f2fLat = simTime().dbl() -  outstandingMsgsData[mt].firstFlitTime.dbl();
-	    msgF2FLatency.collect(f2fLat);
-	  }
+    // first flit of the last packet
+    if (outstandingMsgsData[mt].numPktsReceived + 1 == (unsigned int)p_msg->getMsgLen()) {
+      double f2fLat = simTime().dbl() -  outstandingMsgsData[mt].firstFlitTime.dbl();
+      msgF2FLatency.collect(f2fLat);
+    }
   }
 
   // can not use else here as we want to handle single flit packets
   if (p_msg->getFlitSn() == p_msg->getPacketLength() - 1) {
-	  // last flit of a packet
-	  MsgTupple mt(p_msg->getSrcLid(), p_msg->getAppIdx(), p_msg->getMsgIdx());
-	  mI = outstandingMsgsData.find(mt);
-	  if (mI == outstandingMsgsData.end()) {
-		  opp_error("-E- Received last flit of packet from %d with no corresponding message record", p_msg->getSrcLid());
-	  }
-	  (*mI).second.numPktsReceived++;
-	  EV << "-I- " << getFullPath() << " received last flit of packet: " << (*mI).second.numPktsReceived << " from src: "
-	  <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
+    // last flit of a packet
+    MsgTupple mt(p_msg->getSrcLid(), p_msg->getAppIdx(), p_msg->getMsgIdx());
+    mI = outstandingMsgsData.find(mt);
+    if (mI == outstandingMsgsData.end()) {
+      opp_error("-E- Received last flit of packet from %d with no corresponding message record", p_msg->getSrcLid());
+    }
+    (*mI).second.numPktsReceived++;
+    EV << "-I- " << getFullPath() << " received last flit of packet: " << (*mI).second.numPktsReceived << " from src: "
+    <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
 
-	  // track the latency of the first num pkts of message
-	  if (repFirstPackets) {
-		  if ( (*mI).second.numPktsReceived == repFirstPackets) {
-			  EV << "-I- " << getFullPath() << " received enough (" << repFirstPackets << ") packets for message from src: "
-					 <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
-			  enoughPktsLatency.collect(simTime() - (*mI).second.firstFlitTime);
-			  (*mI).second.enoughPktsLastFlitTime = simTime();
-		  }
-	  }
+    // track the latency of the first num pkts of message
+    if (repFirstPackets) {
+      if ( (*mI).second.numPktsReceived == repFirstPackets) {
+        EV << "-I- " << getFullPath() << " received enough (" << repFirstPackets << ") packets for message from src: "
+           <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
+        enoughPktsLatency.collect(simTime() - (*mI).second.firstFlitTime);
+        (*mI).second.enoughPktsLastFlitTime = simTime();
+      }
+    }
 
-	  // clean completed messages
-	  if ((*mI).second.numPktsReceived == (unsigned int)p_msg->getMsgLen()) {
-		  if (repFirstPackets) {
-			  enoughToLastPktLatencyStat.collect(simTime() - (*mI).second.enoughPktsLastFlitTime);
-		  }
-		  msgLatency.collect(simTime() - (*mI).second.firstFlitTime);
-		  EV << "-I- " << getFullPath() << " received last flit of message from src: "
-				 <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
-		  outstandingMsgsData.erase(mt);
-	  }
+    // clean completed messages
+    if ((*mI).second.numPktsReceived == (unsigned int)p_msg->getMsgLen()) {
+      if (repFirstPackets) {
+        enoughToLastPktLatencyStat.collect(simTime() - (*mI).second.enoughPktsLastFlitTime);
+      }
+      msgLatency.collect(simTime() - (*mI).second.firstFlitTime);
+      EV << "-I- " << getFullPath() << " received last flit of message from src: "
+         <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
+      outstandingMsgsData.erase(mt);
+    }
   }
 
   // for iBW calculations
   if (simTime() >= startStatCol_sec) {
-	 AccBytesRcv += p_msg->getByteLength(); // p_msg->getBitLength()/8;
+    AccBytesRcv += p_msg->getByteLength(); // p_msg->getBitLength()/8;
   }
 
   // we might be arriving on empty buffer:
@@ -337,6 +337,6 @@ void IBSink::finish()
 }
 
 IBSink::~IBSink() {
-	if (p_drainMsg)
-		cancelAndDelete(p_drainMsg);
+  if (p_drainMsg)
+    cancelAndDelete(p_drainMsg);
 }

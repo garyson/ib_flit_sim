@@ -109,13 +109,13 @@ class IBVLArb: public cSimpleModule
   void sendOutMessage(IBDataMsg *p_msg);
   void sendSentMessage(unsigned int portNum, unsigned int vl);
   int  isValidArbitration(unsigned int portNum, unsigned int vl,
-				  int isFirstPacket, int numPacketCredits);
+                          int isFirstPacket, int numPacketCredits);
   int roundRobinNextRQForVL(int numCredits, unsigned int curPortNum, short int vl,
-							int &nextPortNum);
+                            int &nextPortNum);
   int firstComeFirstServeNextRQForVL(int numCredits, unsigned int curPortNum, short int vl,
-							   int &nextPortNum);
+                            int &nextPortNum);
   int  findNextSend( unsigned int &curIdx, ArbTableEntry *Tbl,
-			   unsigned int &curPortNum, unsigned int &curVl );
+                     unsigned int &curPortNum, unsigned int &curVl );
   int  findNextSendOnVL0( unsigned int &curPortNum );
   void displayState();
   void arbitrate();

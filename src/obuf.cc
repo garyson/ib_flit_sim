@@ -80,30 +80,30 @@ void IBOutBuf::initialize()
     // when we get first packets
     scheduleAt(simTime() , p_minTimeMsg);
   } else {
-	 ev << "-I- " << getFullPath() << " port DISABLED " << endl;
+    ev << "-I- " << getFullPath() << " port DISABLED " << endl;
   }
 } // initialize
 
 // places a new allocated IBTQLoadUpdateMsg on the buffer
 void IBOutBuf::sendOrQueuePortLoadUpdateMsg(unsigned int rank, unsigned int firstLid, unsigned int lastLid, int load) {
-	Enter_Method("sendOrQueuePortLoadUpdateMsg lid-range:[%d,%d] load:%d",
-			firstLid, lastLid, load);
+    Enter_Method("sendOrQueuePortLoadUpdateMsg lid-range:[%d,%d] load:%d",
+            firstLid, lastLid, load);
 
-	IBTQLoadUpdateMsg *p_msg = new IBTQLoadUpdateMsg("load-update", IB_TQ_LOAD_MSG);
-	p_msg->setSrcRank(rank);
-	p_msg->setLoad(load);
-	p_msg->setFirstLid(firstLid);
-	p_msg->setLastLid(lastLid);
-	p_msg->setVL(0);
-	p_msg->setByteLength(8);
+    IBTQLoadUpdateMsg *p_msg = new IBTQLoadUpdateMsg("load-update", IB_TQ_LOAD_MSG);
+    p_msg->setSrcRank(rank);
+    p_msg->setLoad(load);
+    p_msg->setFirstLid(firstLid);
+    p_msg->setLastLid(lastLid);
+    p_msg->setVL(0);
+    p_msg->setByteLength(8);
 
-	// if there is no other message on the wire sneak out
-	if ( ! p_popMsg->isScheduled() ) {
-		sendOutMessage(p_msg);
-	} else {
-	    EV << "-I- " << getFullPath() << " queued port-load msg. mgtQ depth " << mgtQ.length() << endl;
-	    mgtQ.insert(p_msg);
-	}
+    // if there is no other message on the wire sneak out
+    if ( ! p_popMsg->isScheduled() ) {
+        sendOutMessage(p_msg);
+    } else {
+        EV << "-I- " << getFullPath() << " queued port-load msg. mgtQ depth " << mgtQ.length() << endl;
+        mgtQ.insert(p_msg);
+    }
 }
 
 // send the message out
@@ -231,10 +231,10 @@ int IBOutBuf::sendFlowControl()
 
     // send management message if no FC sent
     if (!sentUpdate && !mgtQ.empty()) {
-	IBWireMsg *p_msg = (IBWireMsg*)mgtQ.pop();
-	EV << "-I- " << getFullPath() << " popped mgt message:"  << p_msg->getName() << endl;
-	sendOutMessage(p_msg);
-	sentUpdate = 1;
+        IBWireMsg *p_msg = (IBWireMsg*)mgtQ.pop();
+        EV << "-I- " << getFullPath() << " popped mgt message:"  << p_msg->getName() << endl;
+        sendOutMessage(p_msg);
+        sentUpdate = 1;
     }
 
     // last VL zeros the min time update flag only if there are no mgt messages
@@ -265,18 +265,18 @@ void IBOutBuf::handlePop()
 
   // first send mgt msg then try sending a flow control if required:
   if (!mgtQ.empty()) {
-	  IBWireMsg *p_msg = (IBWireMsg*)mgtQ.pop();
-	  EV << "-I- " << getFullPath() << " first pop mgt message:"  << p_msg->getName() << endl;
-	  sendOutMessage(p_msg);
-	  prevPopWasDataCredit = 0;
-	  return;
+    IBWireMsg *p_msg = (IBWireMsg*)mgtQ.pop();
+    EV << "-I- " << getFullPath() << " first pop mgt message:"  << p_msg->getName() << endl;
+    sendOutMessage(p_msg);
+    prevPopWasDataCredit = 0;
+    return;
   }
 
   if (!insidePacket) {
-	  if (sendFlowControl()) {
-		  prevPopWasDataCredit = 0;
-		  return;
-	  }
+    if (sendFlowControl()) {
+      prevPopWasDataCredit = 0;
+      return;
+    }
   }
 
   // got to pop from the queue if anything there
@@ -374,10 +374,10 @@ void IBOutBuf::finish()
      << flowControlDelay.getMax() << " / "
      << flowControlDelay.getStddev() << endl;
   */
-	double oBW = totalBytesSent / (simTime() - firstPktSendTime);
-	recordScalar("Output BW (Byte/Sec)", oBW);
-	flitsSources.record();
-	// EV << "STAT: " << getFullPath() << " Flit Sources:" << endl << flitsSources.detailedInfo() << endl;
+  double oBW = totalBytesSent / (simTime() - firstPktSendTime);
+  recordScalar("Output BW (Byte/Sec)", oBW);
+  flitsSources.record();
+  // EV << "STAT: " << getFullPath() << " Flit Sources:" << endl << flitsSources.detailedInfo() << endl;
 }
 
 IBOutBuf::~IBOutBuf() {
