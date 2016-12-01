@@ -5,7 +5,7 @@
 # Authors: Patrick MacArthur <pmacarth@iol.unh.edu>
 #
 # Copyright (c) 2016, IBM Corporation
-# Copyright (c) 2016, University of New Hampshire InterOperability Laboratory
+# Copyright (c) 2016 University of New Hampshire InterOperability Laboratory
 #
 # This software is available to you under a choice of one of two
 # licenses.  You may choose to be licensed under the terms of the GNU
