@@ -21,8 +21,13 @@
 module load toolchain/system omnetpp dimemas paraver
 
 MODELDIR=/home/pmacarth/src/omnetpp-workspace/ib_model
-TRACE_BASENAME=adjusted
-NETWORK=extraflit
+TRACE_BASENAME=$(basename $1 .prv)
+NETWORK=$2
+
+if [[ $# -lt 2 ]]; then
+	printf "Usage: %s [tracename] [network]\n" "$0" >&2
+	exit 1
+fi
 
 echo "Current directory $(pwd)"
 ${MODELDIR}/utils/make_topology.py ${NETWORK}.config.yml

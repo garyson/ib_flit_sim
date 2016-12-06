@@ -1,0 +1,10 @@
+osm_ucast_mgr_dump_ucast_routes: Switch 0x0008f10500200134
+LID    : Port : Hops : Optimal
+0x0001 : 000  : 00   : yes
+0x0002 : UNREACHABLE
+0x0003 : 004  : 00   : yes
+0x0004 : UNREACHABLE
+0x0005 : UNREACHABLE
+0x0006 : UNREACHABLE
+0x0007 : UNREACHABLE
+0x0008 : 005  : 00   : yes
