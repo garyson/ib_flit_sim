@@ -62,6 +62,16 @@ We need to generate the equivalent NED file.
 '''
 
 
+def normalize_guid(guid):
+    """Normalize a GUID to contain exactly 16 characters, without the
+    leading 0x.
+
+    >>> normalize_guid('0x2c90300001dd0')
+    0x0002c90300001dd0
+    """
+    return "0x" + format(int(guid, 16), "016x")
+
+
 class HCA(yaml.YAMLObject):
     """Representation of a single HCA."""
 
@@ -77,7 +87,7 @@ class HCA(yaml.YAMLObject):
 
     def set_guid(self, guid):
         """Set the GUID of this HCA port to the given value."""
-        self.guid = guid
+        self.guid = normalize_guid(guid)
 
     def output_ned(self, outh):
         """Output the NED component for this HCA."""
@@ -121,7 +131,7 @@ class Switch(yaml.YAMLObject):
 
     def __init__(self, guid):
         """Initialize the switch."""
-        self.guid = guid
+        self.guid = normalize_guid(guid)
         self.ports = []
         self.fdb = []
 
@@ -194,7 +204,7 @@ class Network:
     def get_switch_by_guid(self, guid):
         """Return and/or create the switch with the given GUID."""
         for switch in self.switches:
-            if switch.guid == guid:
+            if switch.guid == normalize_guid(guid):
                 return switch
         switch = Switch(guid)
         self.switches.append(switch)
