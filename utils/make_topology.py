@@ -281,6 +281,8 @@ class Network:
                             fdb.append(255)
                         else:
                             fdb.append(switch.find_port_by_orig_num(int(port)))
+            if switch:
+                switch.fdb = fdb
 
     def parse_ranktohost_csv(self, filename):
         """Parse the list of hosts accessible to MPI."""
