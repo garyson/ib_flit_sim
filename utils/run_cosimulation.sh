@@ -18,8 +18,6 @@
 # CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 
-module load toolchain/system omnetpp dimemas paraver
-
 MODELDIR=$(dirname $0)/..
 TRACE_BASENAME=$(basename $1 .prv)
 NETWORK=$2
@@ -51,9 +49,9 @@ else
     NEWW=new-window
 fi
 echo "+++ $(date) Running co-simulation in new tmux window"
-tmux ${NEWW} -P -n omnet-run -d "module load omnetpp; ${RUN_MODEL} -f ${NETWORK}.ini -n .:${MODELDIR}/src -u Cmdenv -c One --result-dir=${PWD}/results 2>&1 | tee omnetpp.log; echo ${PIPESTATUS[0]} >>omnetpp.log; tmux wait-for -S omnet-run-lock"
+tmux ${NEWW} -P -n omnet-run -d "${RUN_MODEL} -f ${NETWORK}.ini -n .:${MODELDIR}/src -u Cmdenv -c One --result-dir=${PWD}/results 2>&1 | tee omnetpp.log; echo ${PIPESTATUS[0]} >>omnetpp.log; tmux wait-for -S omnet-run-lock"
 sleep 5
-tmux split-window -v -t omnet-run "module load dimemas; Dimemas -S 13K --dim ${TRACE_BASENAME}.dim -venus -p predicted-${NETWORK}.prv ${PWD}/${NETWORK}.dimemas.cfg 2>&1 | tee dimemas.log"
+tmux split-window -v -t omnet-run "Dimemas -S 13K --dim ${TRACE_BASENAME}.dim -venus -p predicted-${NETWORK}.prv ${PWD}/${NETWORK}.dimemas.cfg 2>&1 | tee dimemas.log"
 if [[ ${NEWW} == new-window ]]; then
     tmux select-window -t omnet-run
     tmux wait-for omnet-run-lock
