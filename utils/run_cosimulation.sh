@@ -20,12 +20,21 @@
 
 module load toolchain/system omnetpp dimemas paraver
 
-MODELDIR=/home/pmacarth/src/omnetpp-workspace/ib_model
+MODELDIR=$(dirname $0)/..
 TRACE_BASENAME=$(basename $1 .prv)
 NETWORK=$2
 
 if [[ $# -lt 2 ]]; then
 	printf "Usage: %s [tracename] [network]\n" "$0" >&2
+	exit 1
+fi
+
+if [[ -x ${MODELDIR}/src/ib_flit_sim ]]; then
+	RUN_MODEL=${MODELDIR}/src/ib_flit_sim
+elif [[ -f ${MODELDIR}/src/libib_flit_sim.so ]]; then
+	RUN_MODEL="opp_run -l ${MODELDIR}/src/libib_flit_sim.so"
+else
+	printf "Could not find model library/executable; did you build it?\n" >&2
 	exit 1
 fi
 
@@ -42,7 +51,7 @@ else
     NEWW=new-window
 fi
 echo "+++ $(date) Running co-simulation in new tmux window"
-tmux ${NEWW} -P -n omnet-run -d "module load omnetpp; ${MODELDIR}/src/ib_flit_sim -f ${NETWORK}.ini -n .:${MODELDIR}/src -u Cmdenv -c One --result-dir=${PWD}/results 2>&1 | tee omnetpp.log; echo ${PIPESTATUS[0]} >>omnetpp.log; tmux wait-for -S omnet-run-lock"
+tmux ${NEWW} -P -n omnet-run -d "module load omnetpp; ${RUN_MODEL} -f ${NETWORK}.ini -n .:${MODELDIR}/src -u Cmdenv -c One --result-dir=${PWD}/results 2>&1 | tee omnetpp.log; echo ${PIPESTATUS[0]} >>omnetpp.log; tmux wait-for -S omnet-run-lock"
 sleep 5
 tmux split-window -v -t omnet-run "module load dimemas; Dimemas -S 13K --dim ${TRACE_BASENAME}.dim -venus -p predicted-${NETWORK}.prv ${PWD}/${NETWORK}.dimemas.cfg 2>&1 | tee dimemas.log"
 if [[ ${NEWW} == new-window ]]; then
