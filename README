@@ -1,11 +1,15 @@
-This directory tree hold an InfiniBand model with support for 
-IB flow control scheme, Arbitration over multiple VLs and routing 
+This directory tree hold an InfiniBand model with support for
+IB flow control scheme, Arbitration over multiple VLs and routing
 based on Linear Forwarding Tables.
 
-To run it:
-1. opp_makemake -f --deep -O out -X utils
-2. make
-
-cd into the example dir and look for a */README
-
-For more info regarding each one of the model modules see the doc directory
+To run it, first make sure the OMNeT++ release bin directory is included in the LINUX search path
+export PATH=$PATH:/..../omnetpp-4.2.2/bin/
+Compile the model:
+make makefiles; make; make MODE=release
+Inspect the simulation setups available under the "examples" directory.
+For example run:
+export NEDPATH=$d/src:$d/examples
+cd $d/examples/is1_3l_32n
+$d/out/gcc-release/src/ib_flit_sim -f is1_3l_32n.ini -c OneHot
+Or without GUI:
+$d/out/gcc-release/src/ib_flit_sim -f is1_3l_32n.ini -c OneHot –u Cmdenv
