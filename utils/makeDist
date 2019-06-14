@@ -51,7 +51,7 @@ make > /dev/null
 if test $? = 0; then
    echo Built IB Flit Level distribution into $tarFileName
    mv ../$tarFileName $origDir
-else
+else 
    echo DIST FAILED
 fi
 echo Cleaning up

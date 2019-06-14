@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014-2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -26,43 +25,33 @@ package ib_model;
 module HCA
 {
     parameters:
-        // for Dimemas integration
-        int appCount;
-
         int srcLid;
-        int maxVL;
         @display("bgb=340,225;i=device/server2");
     gates:
         inout port;
-        input msgIn[appCount] @loose;
-        output msgDone @loose;
 
     submodules:
-        app[appCount]: IBApp {
+        app: IBApp {
             parameters:
                 @display("p=313,170");
         }
         gen: IBGenerator {
             parameters:
-                maxVL = maxVL;
                 srcLid = srcLid;
                 @display("i=block/source;p=246,170");
             gates:
-                in[appCount];
+                in[1];
         }
         sink: IBSink {
             parameters:
-                maxVL = maxVL;
                 @display("i=block/sink;p=248,74");
         }
         obuf: IBOutBuf {
             parameters:
-                maxVL = maxVL;
                 @display("i=block/queue;p=69,169");
         }
         ibuf: IBInBuf {
             parameters:
-                maxVL = maxVL;
                 isHcaIBuf = 1;
                 numPorts = 1;
                 @display("i=block/subqueue;p=69,74");
@@ -81,10 +70,7 @@ module HCA
 
         }
     connections:
-        for i = 0..appCount-1 {
-            app[i].out <--> gen.in[i];
-            msgIn[i] --> app[i].in;
-        }
+        app.out <--> gen.in[0];
         gen.out --> vlarb.in[0];
         vlarb.sent[0] --> { @display("m=m,68,20,68,20"); } --> gen.sent;
         vlarb.out --> { @display("m=m,16,56,24,60"); } --> obuf.in;
@@ -98,6 +84,4 @@ module HCA
 
         port$i --> ibuf.in;
         obuf.out --> port$o;
-
-        msgDone <-- sink.done;
 }

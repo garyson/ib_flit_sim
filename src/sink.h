@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014-2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -37,7 +36,7 @@ public:
 	};
 	std::string dump() const {
 		char buff[128];
-		sprintf(buff, " src: %u app: %u msg: %u", srcId, appIdx, msgIdx);
+		sprintf(buff, " src: %d app: %d msg: %d", srcId, appIdx, msgIdx);
 		return(std::string(buff));
 	};
 };
@@ -54,8 +53,8 @@ public:
 // store msg context
 class OutstandingMsgData {
 public:
-	omnetpp::simtime_t firstFlitTime;
-	omnetpp::simtime_t enoughPktsLastFlitTime;
+	simtime_t firstFlitTime;
+	simtime_t enoughPktsLastFlitTime;
 	unsigned int numPktsReceived;
 
 	OutstandingMsgData() { numPktsReceived = 0; };
@@ -64,11 +63,11 @@ public:
 //
 // Consumes IB Credits; see NED file for more info.
 //
-class IBSink : public omnetpp::cSimpleModule
+class IBSink : public cSimpleModule
 {
  private:
-  omnetpp::cMessage *p_hiccupMsg;
-  omnetpp::cMessage *p_drainMsg;
+  cMessage *p_hiccupMsg;
+  cMessage *p_drainMsg;
 
   // parameters
   double popDlyPerByte_ns; // the PCI Exp drain rate per byte
@@ -77,13 +76,10 @@ class IBSink : public omnetpp::cSimpleModule
   double startStatCol_sec; // time to start co
   unsigned int repFirstPackets; // if not zero declare a message as done after first repFirstPackets arrived
 
-  bool notifyOnDone; // send a message to the "done" gate when message done?
-  omnetpp::simtime_t hiccupStart;
-
   // data structure
   int     duringHiccup;                  // set to 1 if during a hiccup
-  omnetpp::cQueue  queue;
-  omnetpp::simtime_t lastConsumedPakcet; // the last time a packet was consumed
+  cQueue  queue;
+  simtime_t lastConsumedPakcet;          // the last time a packet was consumed
   unsigned int lid;                      // the HCA LID
   std::map<unsigned int, unsigned int> lastPktSnPerSrc; // last packet serial number per SRC
   // in order to calculate the message latencies we track outstanding messages,
@@ -91,40 +87,35 @@ class IBSink : public omnetpp::cSimpleModule
   std::map<MsgTupple, class OutstandingMsgData, MsgTuppleLess> outstandingMsgsData;
 
   // methods
-  void newDrainMessage(double delay);
+  void newDrainMessage(double delay);  
   void consumeDataMsg(IBDataMsg *p_msg);
-  void handlePop(omnetpp::cMessage *p_msg);
+  void handlePop(cMessage *p_msg);
   void handleData(IBDataMsg *p_msg);
-  void handleHiccup(omnetpp::cMessage *p_msg);
+  void handleHiccup(cMessage *p_msg);
 
   // statistics
-  omnetpp::cDoubleHistogram PakcetFabricTime;
-  omnetpp::cStdDev waitStats; // Data Packets Wait Time statistics
-  omnetpp::cStdDev hiccupStats;// statistics about hiccups
+  cDoubleHistogram PakcetFabricTime; 
+  cStdDev waitStats;          // Data Packets Wait Time statistics
+  cStdDev hiccupStats;        // statistics about hiccups
   std::vector<int> VlFlits;   // total number of FLITs per VL
   int  AccBytesRcv;           // total number of bytes received
-  omnetpp::cOutVector oooPackets;// vector of number of total OOO packets received
+  cOutVector oooPackets;      // vector of number of total OOO packets received
   unsigned int totOOOPackets; // total number of OOO packets received
-  omnetpp::cStdDev oooWindow; // in packets
+  cStdDev oooWindow;          // in packets
   unsigned int totOOPackets;  // the total number of packets that need retransmission inc the window
   unsigned int totIOPackets;  // the total packets received in order
-  omnetpp::cDoubleHistogram msgLatency; // the network latency of received messages from the
+  cDoubleHistogram msgLatency; // the network latency of received messages from the
                                // time first msg flit was injected to the time last msg flit received
-  omnetpp::cDoubleHistogram msgF2FLatency; // the network latency of received messages from the
+  cDoubleHistogram msgF2FLatency; // the network latency of received messages from the
                                // time first msg flit was injected to the time last packet first flit received
-  omnetpp::cDoubleHistogram enoughPktsLatency; // the network latency of received repFirstPackets of the messages
+  cDoubleHistogram enoughPktsLatency; // the network latency of received repFirstPackets of the messages
                                      // from the time first msg flit was injected to the time the last
                                      // flit of the first repFirstPackets was received
-  omnetpp::cStdDev enoughToLastPktLatencyStat; // statistics about the time difference from enough pkts to last pkt
-
-  // packet inter-arrival times per sender
-  std::vector<omnetpp::cDoubleHistogram> interArrivalTimes;
-
-  std::vector<omnetpp::simtime_t> lastPacketTime;
+  cStdDev enoughToLastPktLatencyStat; // statistics about the time difference from enough pkts to last pkt
 
  protected:
   virtual void initialize();
-  virtual void handleMessage(omnetpp::cMessage *msg);
+  virtual void handleMessage(cMessage *msg);
   virtual void finish();
   virtual ~IBSink();
 };

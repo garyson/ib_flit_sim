@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014-2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -67,7 +66,7 @@
 //   - Decrease UsedStatic[VL] and update FREE[VL]
 //   - If the message that was sent is the last in the packet we need to
 //     send the "done" message to all connected ports.
-//
+// 
 // WHEN DO WE SEND DATA OUT?
 // * At any given time not more the maxBeingSent packets can be sent.
 //   The VLAs track this. Each VLA that wants to send the HOQ
@@ -89,15 +88,26 @@
 #include <map>
 #include <vector>
 #include <pktfwd.h>
+#define MAX_LIDS 10
+
+// Store packet specific information to store the packet state  
+class PacketState {
+  int outPort; // the out port
+
+ public:
+  PacketState(int pn) {
+    outPort = pn;
+  };
+};
 
 //
 // Input Buffer for Receiving IB FLITs and VL credit updates
 //
-class IBInBuf : public omnetpp::cSimpleModule
+class IBInBuf : public cSimpleModule
 {
  private:
-  omnetpp::cMessage *p_popMsg;
-  omnetpp::cMessage *p_minTimeMsg;
+  cMessage *p_popMsg;
+  cMessage *p_minTimeMsg;
 
   // parameters:
   int ISWDelay ; // delay in ns contributed by SW in IBUF
@@ -112,7 +122,7 @@ class IBInBuf : public omnetpp::cSimpleModule
 
   // data strcture
   int numBeingSent;   // Number of packets being currently sent
-  omnetpp::cQueue **Q;// Incoming packets Q per VL per out port
+  cQueue **Q;         // Incoming packets Q per VL per out port
   int hoqOutPort[8];  // The output port the packet at the HOQ is targetted to
   std::vector<unsigned int> staticFree;  // number of free credits per VL
   std::vector<long> ABR;    // total number of received credits per VL
@@ -121,25 +131,29 @@ class IBInBuf : public omnetpp::cSimpleModule
   // there is only one packet stream allowed on the input so we track its
   // parameters simply by having the "current" values. We check for mix on the
   // push handler
-  int curPacketId;
+  int curPacketId; 
   int curPacketSrcLid;
   std::string curPacketName;
   unsigned int curPacketCredits;
   int curPacketVL;
   int curPacketOutPort;
-  omnetpp::simtime_t lastSendTime;
+  simtime_t lastSendTime;
+
+  // as we might have multiple sends we need to track the "active sends"
+  // given the packet ID we track various state variables.
+  std::map<int, PacketState, std::less<int> > activeSendPackets;
 
   // pointer the container switch
-  omnetpp::cModule* Switch;
+  cModule* Switch;
   Pktfwd* pktfwd;
 
   // statistics
-  omnetpp::cLongHistogram staticUsageHist[8];
-  omnetpp::cOutVector usedStaticCredits;
-  omnetpp::cOutVector CredChosenPort;
-  omnetpp::cOutVector dsLidDR;
-  omnetpp::cOutVector outPortDR;
-  omnetpp::cOutVector pktidDR;
+  cLongHistogram staticUsageHist[8];
+  cOutVector usedStaticCredits;
+  cOutVector CredChosenPort;
+  cOutVector dsLidDR;
+  cOutVector outPortDR;
+  cOutVector pktidDR;
   unsigned int numDroppedCredits;
 
   // methods
@@ -156,14 +170,15 @@ class IBInBuf : public omnetpp::cSimpleModule
   // return 1 if the HoQ at the given port and VL is free
   int isHoqFree(int portNum, int vl);
   void handlePush(IBWireMsg *p_msg);
+  void handleTQLoadMsg(IBTQLoadUpdateMsg *p_msg);
   virtual void initialize();
-  virtual void handleMessage(omnetpp::cMessage *msg);
+  virtual void handleMessage(cMessage *msg);
   virtual void finish();
 
  public:
   // return 1 if incremented the number of parallel sends
   int incrBusyUsedPorts();
-
+  
 };
 
 #endif

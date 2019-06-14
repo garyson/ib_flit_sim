@@ -25,15 +25,17 @@ DESCRIPTION:
 The sink consumes IB packets in the order they arrived at its input.
 
 OPERATION:
-Traffic is provided through the "in" port.
+Traffic is provided through the "in" port. 
 The sink is able to consume at a configurable rate.
-It is also able to "hiccup" for configurable amount of time and then continue
-receiving for a configurable amount of time
+It is also able to "hiccup" for configurable amount of time and then continue 
+receiving for a configurable amount of time 
 
-PARAMETERS:
+PARAMETERS:	
 recordVectors: control recording of vectors
 creditSize: credit size in bytes
 pciExpWidth: the PCI Exp Bus Width for rate claculation 4x or 8x
-hiccupDuration_us: the time a hiccup in drain might take
+hiccupDuration_us: the time a hiccup in drain might take 
 hiccupDelay_us: the time between hiccups
 maxVL: Maximum VL we send on
+
+

@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014-2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -19,8 +18,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 //
-// An Application - Message Generator
-//
+// An Application - Message Generator 
+// 
 // Overview:
 // =========
 // The task of the IB message generator is to mimic an application
@@ -30,7 +29,7 @@
 // Message generation can be configured with the following set of orthogonal
 // mechanisms:
 // * Destination selection - how a message destinaton is defined
-// * Message length - what length the message will be in (can be down
+// * Message length - what length the message will be in (can be down 
 //   to packet length if we are in single packet message
 // * Injection rate and burstiness - we incorporate inter/intra message jitter
 // * SQ - what SQ the application messages belongs to
@@ -60,33 +59,33 @@
 //           DST_SEQ_RAND - choose from the sequence in random order
 //
 // Parameters for destination selection:
-// dstMode - possible values: param|seq_once|seq_loop|seq_rand
+// dstMode - possible values: param|seq_once|seq_loop|seq_rand 
 // dstLid - the destination LID - used in DST_PARAM
 // dstSeqVecFile - the vector file name that contain the sequences
 // dstSeqVecIdx - the index of the generator in the file
-//
+// 
 // Message/Packet Size Selection:
 // ==============================
 // MSG_LEN_PARAM - message length is based on msgSize param
 // MSG_LEN_SET - selects from a set of sizes with their relative probability
-//
+// 
 // Parameters for message size:
 // msgLenMode - possible values: param|set
 // msgLength_B - the length of a message in bytes - last packet may be padded
-// msgLenSet - a set of lengths
+// msgLenSet - a set of lengths 
 // msgLenProb - probability for each length
 // mtuLen_B - the MTU of single packet. It is the same for entire message.
 //
 // NOTE: due to current limitation of the simulator of sending full flits
 // all sizes are padded to flitSize ...
-//
+// 
 // Traffic Shaping:
 // ================
 // There are no special modes here.
-//
+// 
 // Parameters that control shaping:
 // msg2msgGap_ns - the extra delay from one msg end to the next start [ns]
-//
+// 
 // SQ selection:
 // ================
 // Currently there is nothing special here. SQ assigned by param
@@ -102,21 +101,18 @@
 
 #include <omnetpp.h>
 
-#include <queue>
-
 //
 // Generates IB Application Messages
 //
-class IBApp : public omnetpp::cSimpleModule
+class IBApp : public cSimpleModule
 {
  private:
   // destination selection modes
-  enum dstSelModes {
+  enum dstSelModes { 
     DST_PARAM,     // invoke the dstLid param every message
     DST_SEQ_ONCE,  // use the dstSeq vector of dstLids only once.
     DST_SEQ_LOOP,  // continously loop through the dstSeq vector od dstLids.
-    DST_SEQ_RAND,  // Destination is randomly selected from the sequence
-    DST_QUEUE,     // Messages are placed in a queue by an external controller
+    DST_SEQ_RAND   // Destination is randomly selected from the sequence
   };
 
   // how message length is defined
@@ -125,23 +121,21 @@ class IBApp : public omnetpp::cSimpleModule
     MSG_LEN_SET    // select from the given set of lengths/probabilities
   };
 
-  // - destination
+  // - destination 
   dstSelModes msgDstMode;    // mode for selecting destination
   std::string dstSeqVecFile; // the vector file name that contain the sequences
   unsigned int dstSeqVecIdx; // the index of the generator in the file
   std::vector<int> *dstSeq; // a destination lid sequence
-
-  // - length
+  
+  // - length 
   msgLenModes msgLenMode;          // possible values: param|set
   std::vector<int> msgLenSet; // a set of lengths
-  omnetpp::cLongHistogram msgLenProb;// probability for each index in msgLenSet
+  cLongHistogram msgLenProb;// probability for each index in msgLenSet
 
   // - shape
   double msg2msgGap_ns;   // extra delay from one msg end to the next start
-
+   
   // - SQ
-  std::queue<DimReqMsg *> msgQueue; // send queue for this application
-  bool idle;
 
   // state
   unsigned int dstSeqIdx; // Using a sequence of dLids the next index to use
@@ -149,7 +143,7 @@ class IBApp : public omnetpp::cSimpleModule
   unsigned int msgIdx;    // counter of generated messages
 
   // statistics
-  omnetpp::cOutVector seqIdxVec;   // track the current sequence index
+  cOutVector seqIdxVec;   // track the current sequence index
 
   // methods
  private:
@@ -162,7 +156,7 @@ class IBApp : public omnetpp::cSimpleModule
 
  protected:
   virtual void initialize();
-  virtual void handleMessage(omnetpp::cMessage *msg);
+  virtual void handleMessage(cMessage *msg);
   virtual void finish();
 };
 

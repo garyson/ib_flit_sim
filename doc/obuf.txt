@@ -22,14 +22,16 @@ TITLE:
 An IB Port Output Buffer
 
 DESCRIPTION:
-The output buffer is responsible for making sure no hiccups occure
+The output buffer is responsible for making sure no hiccups occure 
 on the IB line. It also injects flow-control packets if required and
 at a minimum interval
 
-PARAMETERS:
+PARAMETERS:	
 recordVectors: control recording of vectors
 width: the output link width ,4, 8, 12 [lanes]
 speed: the output speed 2.5, 5.0, 10.0 [Gbps]
 size: the number of credits the Q can store
 maxVL: Maximum VL we send on
 credMinTime: time between VL Credit packets in [usec]
+
+

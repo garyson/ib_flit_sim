@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014,2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -27,14 +26,14 @@ simple IBVLArb
 {
  parameters:
   int isHcaArbiter;        // if not zero means the VLA is in HCA
-  int numPorts;            // number of input ports
-  int coreFreq @unit(Hz) = default(1000MHz);  // Core frequency in MHz
+  int numPorts;   	      // number of input ports 
+  int coreFreq @unit(Hz);  // Core frequency in MHz
   int busWidth @unit(B);   // Switch bus width in bytes (from in-buf 2 vla)
   int maxVL;               // Maximum VL we send on
-  int vlHighLimit = default(16);         // IB VL Arb High Limit
-  string highVLArbEntries = default("0:1"); // "vl:weight vl:weight ..."
-  string lowVLArbEntries = default("0:1");  // "vl:weight vl:weight ..."
-  bool useFCFSRQArb = default(false);       // if true will arbitrate RQs on same VL by oldest
+  int vlHighLimit;         // IB VL Arb High Limit
+  string highVLArbEntries; // "vl:weight vl:weight ..."
+  string lowVLArbEntries;  // "vl:weight vl:weight ..."
+  bool useFCFSRQArb;       // if true will arbitrate RQs on same VL by oldest  
  gates:
   input in[];
   input txCred;
@@ -42,3 +41,4 @@ simple IBVLArb
   output out;
   output sent[];
 }
+

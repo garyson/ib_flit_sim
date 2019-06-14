@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014,2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -24,25 +23,22 @@ module SwitchPort
 {
     parameters:
         int numSwitchPorts;
-        int maxVL;
 
         @display("bgb=249,215");
     gates:
-        inout port;            // port to outside the switch
-        inout sw_port[];      // inner switch port (between SwitchPorts)
-        inout sw_sent_port[];   // inner sent msgs ports
+        inout port;				// port to outside the switch
+        inout sw_port[];		// inner switch port (between SwitchPorts)
+        inout sw_sent_port[];	// inner sent msgs ports
 
     submodules:
         obuf: IBOutBuf {
             parameters:
-                maxVL = maxVL;
                 @display("i=block/boundedqueue;p=76,80");
         }
         ibuf: IBInBuf {
             parameters:
                 isHcaIBuf = 0;
                 numPorts = numSwitchPorts;
-                maxVL = maxVL;
                 @display("i=block/subqueue;p=191,80");
             gates:
                 out[numSwitchPorts];
@@ -50,7 +46,6 @@ module SwitchPort
         }
         vlarb: IBVLArb {
             parameters:
-                maxVL = maxVL;
                 isHcaArbiter = 0;
                 numPorts = numSwitchPorts;
                 @display("p=191,156;i=block/dispatch");
@@ -84,22 +79,20 @@ module Switch
 {
     parameters:
         double numSwitchPorts;     // Total num of switch ports
-        double ISWDelay @unit(ns) = default(50ns); // Delay brought by IBUF in SWitch
-        double VSWDelay @unit(ns) = default(50ns); // Delay in ns brought by IBUF in SWitch
-        string pktFwdType;         // The type of the packet forwarding engine to use
-        int maxVL;
+        double ISWDelay @unit(ns); // Delay brought by IBUF in SWitch
+        double VSWDelay @unit(ns); // Delay in ns brought by IBUF in SWitch
+		  string pktFwdType;         // The type of the packet forwarding engine to use
         @display("i=abstract/router");
     gates:
         inout port[];
 
     submodules:
         pktfwd : < pktFwdType > like ib_model.PktFwd_Ifc {
-            parameters:
+            parameters: 
                 numPorts = numSwitchPorts;
         }
         port[numSwitchPorts]: SwitchPort {
             parameters:
-                maxVL = maxVL;
                 numSwitchPorts = numSwitchPorts;
                 @display("p=90,44;b=48,32");
             gates:

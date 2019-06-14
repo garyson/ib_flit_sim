@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014,2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -27,29 +26,29 @@ simple IBInBuf
 {
  parameters:
   // input line width 4x,8x,12x
-  int width = default(4);
+  int width; 
   // if 1 means the input buffer is part  of HCA (no routing required)
   int isHcaIBuf;
   // number of output ports to drive to
   int numPorts;
   // max number of parallel sends = switch "speed-up"
-  int maxBeingSent = default(3);
+  int maxBeingSent;
   // the total buffer size in credits
-  int totalBufferSize = default(2048);
+  int totalBufferSize; 
   // max VL num. If only VL0 value is 0
   int maxVL;
   // declares the buffer as lossy - drop packets if full but lie about the free credits
-  bool lossyMode = default(false);
+  bool lossyMode;
 
-  // Each VL is assigned a max number of static credits
-  int maxStatic0 = default(512);
-  int maxStatic1 = default(512);
-  int maxStatic2 = default(512);
-  int maxStatic3 = default(512);
-  int maxStatic4 = default(512);
-  int maxStatic5 = default(512);
-  int maxStatic6 = default(512);
-  int maxStatic7 = default(512);
+  // Each VL is assigned a max number of static credits 
+  int maxStatic0;
+  int maxStatic1;
+  int maxStatic2;
+  int maxStatic3;
+  int maxStatic4;
+  int maxStatic5;
+  int maxStatic6;
+  int maxStatic7;
  gates:
   input in;
   input sent[];
@@ -57,3 +56,5 @@ simple IBInBuf
   output txCred;
   output rxCred;
 }
+
+

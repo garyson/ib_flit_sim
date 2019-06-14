@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014-2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -26,7 +25,7 @@
 //
 // The packet forwarder is responsible for output port selection
 //
-class Pktfwd : public omnetpp::cSimpleModule
+class Pktfwd : public cSimpleModule
 {
 public:
 
@@ -41,14 +40,17 @@ public:
 public:
   // get the output port for the given LID
   virtual int getPortByLID(unsigned int lid);
-
+  
   // report queuing of flits on TQ for DLID (can be negative for arb)
   virtual int repQueuedFlits(unsigned int rq, unsigned int tq, unsigned int dlid, int numFlits);
+
+  // handle a report about port loading and unloading
+  virtual void handleTQLoadMsg(unsigned int tq, unsigned int srcRank, unsigned int fitstLid, unsigned int lastLid, int load);
 
 protected:
     virtual void initialize();
     virtual void finish();
-    ~Pktfwd();
+	 ~Pktfwd();
 };
 
 #endif

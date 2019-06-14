@@ -24,7 +24,7 @@ for {set i 1} {$i <= $nodes} {incr i} {
 	set idx [expr int(rand()*[llength $idxs])]
 	set n [lindex $idxs $idx]
 	set idxs [lreplace $idxs $idx $idx]
-
+	
 	puts "**H_${i}_U1.app.dstSeqVecIdx = $n"
-}
+}	
 exit 0

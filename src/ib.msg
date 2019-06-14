@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014-2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -22,22 +21,19 @@
 // Enumarate all IB massages
 enum IB_MSGS
 {
-  IB_DATA_MSG     = 1;
-  IB_FLOWCTRL_MSG = 2;
-  IB_SENT_MSG     = 3;
-  IB_TXCRED_MSG   = 4;
-  IB_RXCRED_MSG   = 5;
-  IB_MINTIME_MSG  = 6;
-  IB_POP_MSG      = 7;
+  IB_DATA_MSG     = 1; 
+  IB_FLOWCTRL_MSG = 2; 
+  IB_SENT_MSG     = 3; 
+  IB_TXCRED_MSG   = 4; 
+  IB_RXCRED_MSG   = 5; 
+  IB_MINTIME_MSG  = 6; 
+  IB_POP_MSG      = 7; 
   IB_HICCUP_MSG   = 8;
   IB_FREE_MSG     = 9;
   IB_DONE_MSG     = 10;
   IB_APP_MSG      = 11;
   IB_PUSH_MSG     = 12;
-  IB_DIM_SEND_MSG = 14;
-  IB_DIM_DONE_MSG = 15;
-  IB_DIM_RREQ_MSG = 16;
-  IB_DIM_RTR_MSG  = 17;
+  IB_TQ_LOAD_MSG  = 13; 
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -56,50 +52,42 @@ message IBWireMsg extends cPacket
 
 //
 // NOTE the generic message already have length in bits !!!
-//
+// 
 
 message IBDataMsg extends IBWireMsg
 {
   int appIdx;           // the application index within the SRC
-                        //# used by IBGen, IBSink
   int msgIdx;           // a message ID unique to the SRC
-                        //# used by IBGen, IBSink
   int msgLen;           // number of packets in the msg
-                        //# used by IBSink
   int pktIdx;           // packet index within the message
-                        //# used by IBGen, IBSink
-  int packetId;         // globally unique packet ID
-                        //# used by IBInBuf
-  int packetSn;         // serial number of packet by the source to this dst
-                        //# used by IBSink
-  int flitSn;           // serial number with the flit: 0..N
-                        //# used by IBGen, IBInBuf, IBOutBuf, IBSink, IBVLArb
-  int PacketLength;     // Total number of credits in this packet.
-                        //# used by IBOutBuf, IBSink, IBVLArb
-  int dstLid;           // target LID
-                        //# used by IBInBuf, IBSink
-  int srcLid;           // source LID
-                        //# used by IBInBuf, IBOutBuf, IBSink
-  int SL;               // the SL
-                        //# not used
-  simtime_t SwTimeStamp;// Time stamp set when credit gets in IBRX
-                        //# set in IBInBuf, used by IBVLArb
-  simtime_t injectionTime; // the time the credit hit the wire
-                           //# used by IBSink
+  int packetId;       	// globally unique packet ID 
+  int packetSn;         // serial number of packet by the source to this dst 
+  int flitSn;       	// serial number with the flit: 0..N 
+  int PacketLength;     // Total number of credits in this packet. 
+  int PacketLengthBytes;// Total packet Length in Bytes
+  int dstLid;         	// target LID 
+  int srcLid;         	// source LID 
+  int SL;             	// the SL 
+  int useStatic;       	// Used in ib_credits
+  simtime_t SwTimeStamp;// Time stamp set when credit gets in IBRX    
+  simtime_t injectionTime; // the time the credit hit the wire 
   bool beforeAnySwitch; // set to true by HCA and then to false by the first switch - to identify loops
-                        //# used by IBInBuf
-  bool sendInline;      // set to true if sent inline (no PCIe overhead on send)
-                        //# used internally by IBGen
 }
-
 
 message IBFlowControl extends IBWireMsg
 {
-  byteLength = 8;
   long FCTBS;
   long FCCL;
 }
 
+// this message used to signal a down port for upper level switch is loaded/unloaded
+message IBTQLoadUpdateMsg extends IBWireMsg
+{
+  int load; // 0 - unloaded, 1 - loaded, 2 - overload
+  int srcRank;
+  int firstLid; // the LID range
+  int lastLid;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 //
@@ -152,11 +140,11 @@ message IBDoneMsg extends cMessage
   short VL;
 }
 
-// Applications sends this message that represent a transmission request to
+// Applications sends this message that represent a transmission request to 
 // one destination on some schedule queue
-message IBAppMsg extends cPacket
+message IBAppMsg extends cMessage
 {
-  unsigned int appIdx;   // the application Idx in the SRC
+  unsigned int appIdx;   // the application Idx in the SRC 
   unsigned int msgIdx;   // the application message index (uniq per APP)
   unsigned int SQ;       // the scheduler Q for this message
   unsigned int lenBytes; // the message length in bytes
@@ -171,25 +159,3 @@ message IBAppMsg extends cPacket
   unsigned int VL;       // the out VL to be used
 }
 
-message DimReqMsg extends cMessage
-{
-  simtime_t inject_time;
-  unsigned int srcNode;
-  unsigned int srcLid;
-  unsigned int srcApp;
-  unsigned int msgId;    // unique identifier for the message per-sender app
-  unsigned int dstNode;
-  unsigned int dstLid;
-  unsigned int dstApp;
-  unsigned int mpiTag;
-  unsigned int lenBytes;
-  uint64_t event_ptr;
-  uint64_t event_out_ptr;
-}
-
-message DimDoneMsg extends cMessage
-{
-  simtime_t complete_time;
-  unsigned int srcLid;
-  unsigned int msgId;
-}

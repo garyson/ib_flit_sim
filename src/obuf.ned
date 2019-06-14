@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014,2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -26,12 +25,16 @@ package ib_model;
 simple IBOutBuf
 {
     parameters:
-        bool enabled = default(true); // set to false to turn OFF the link
-        int size = default(72);       // the number of flits the Q can store
+		  bool enabled = default(true); // set to false to turn OFF the link
+        double size;                  // the number of flits the Q can store
         int maxVL;                    // Maximum VL we send on
+        double credMinTime @unit(us); // time between VL Credit packets
+						  // NOTE: need to adjust if width change
     gates:
         input in;
         input rxCred;
         output out;
         output free;
 }
+
+

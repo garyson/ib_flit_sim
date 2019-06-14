@@ -22,17 +22,17 @@ TITLE:
 An IB VL Arbiter
 
 DESCRIPTION:
-The arbiter has to select which of the packets available on its input HoQ
+The arbiter has to select which of the packets available on its input HoQ 
 from each of the input ports to sent to the output buffer.
 
 OPERATION:
 According to IB spec.
 
-PARAMETERS:
+PARAMETERS:	
 recordVectors: control recording of vectors
 width: Interface width 1x 4x 8x 12x
 isHcaArbiter: if not zero emans the VLA is in HCA
-numPorts: number of input ports
+numPorts: number of input ports 
 coreFreq_MH: Core frequency in MHz
 maxVL: Maximum VL we send on
 vlHighLimit: IB Vl Arb High Limit

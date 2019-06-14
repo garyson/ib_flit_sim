@@ -55,7 +55,7 @@ proc genLastStage {nExtra nRecNodes} {
 ###########################################################################
 #
 # MAIN FLOW
-#
+# 
 set pgftMode 0
 if {[lindex $argv 0] == "-pgft"} {
 	set pgftMode 1
@@ -84,14 +84,14 @@ genLastStage $nExtraNodes $nRecNodes
 
 for {set n 0} {$n < $nodes} {incr n} {
 	puts "**H_${n}_U1.app.dstSeqVecIdx = $n"
-
+	
 	set dsts $DESTS($n)
-	set dstslen [ llength $dsts ]
-	if {$dstslen <= $cut}  {
+	set dstslen [ llength $dsts ] 
+	if {$dstslen <= $cut}  { 
 		puts $f "$n:   $dsts"
 	} else {
 		set nlines [expr {$dstslen / $cut}]
-		for {set k 0} {$k <= $nlines} {incr k} {
+		for {set k 0} {$k <= $nlines} {incr k} {      
 			set start [expr {$k * $cut}]
 			if  {($k == $nlines) && ([expr {$dstslen % $cut}] != 0) }   {
 				set end  $dstslen

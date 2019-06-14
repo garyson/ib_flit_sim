@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014-2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -26,15 +25,14 @@ package ib_model;
 simple IBSink
 {
  parameters:
-  int flitSize @unit(B) = default(64B);       // flit size in bytes
+  double flitSize @unit(B);       // flit size in bytes
   double popDlyPerByte @unit(ns);   // the PCI Exp drain rate
   int maxVL;                      // Maximum VL we send on
-  volatile double hiccupDuration @unit(us) = default(0.001ns); // the time a hiccup may take
-  volatile double hiccupDelay @unit(us) = default(10000us);    // the time between hiccups
-  double startStatCol @unit(s) = default(0us);  // Time to start statistics collection from
-  int repFirstPackets = default(0); // number of first packets that if are accepted record message latency done
+  volatile double hiccupDuration @unit(us); // the time a hiccup may take 
+  volatile double hiccupDelay @unit(us);    // the time between hiccups
+  double startStatCol @unit(s);  // Time to start statistics collection from
+  int repFirstPackets; // number of first packets that if are accepted record message latency done 
  gates:
   input in;
   output sent;
-  output done;
 }

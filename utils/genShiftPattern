@@ -36,13 +36,13 @@ for {set n 1} {$n <= $nodes} {incr n} {
 		}
 	}
 	puts "**H_${n}_U1.app.dstSeqVecIdx = [expr $n -1]"
-
-	set dstslen [ llength $dsts ]
-	if {$dstslen <= $cut}  {
+	
+	set dstslen [ llength $dsts ] 
+	if {$dstslen <= $cut}  { 
 		puts $f "[expr $n -1]:   $dsts"
 	} else {
 		set nlines [expr {$dstslen / $cut}]
-		for {set k 0} {$k <= $nlines} {incr k} {
+		for {set k 0} {$k <= $nlines} {incr k} {      
 			set start [expr {$k * $cut}]
 			if  {($k == $nlines) && ([expr {$dstslen % $cut}] != 0) }   {
 				set end  $dstslen

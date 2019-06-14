@@ -3,7 +3,6 @@
 //         InfiniBand FLIT (Credit) Level OMNet++ Simulation Model
 //
 // Copyright (c) 2004-2013 Mellanox Technologies, Ltd. All rights reserved.
-// Copyright (c) 2014-2016 University of New Hampshire InterOperability Laboratory
 // This software is available to you under the terms of the GNU
 // General Public License (GPL) Version 2, available from the file
 // COPYING in the main directory of this source tree.
@@ -21,8 +20,8 @@
 //
 // IB FLITs Generator.
 // Send IB FLITs one at a time. Received Messages from a set of Applications
-//
-// Internal Messages:
+// 
+// Internal Messages: 
 // push - inject a new data FLIT into the Queues in PCIe speed and jitter
 //
 // External Messages:
@@ -37,7 +36,6 @@
 #include "gen.h"
 #include "vlarb.h"
 #include <vec_file.h>
-using namespace omnetpp;
 
 Define_Module(IBGenerator);
 
@@ -45,14 +43,14 @@ Define_Module(IBGenerator);
 void IBGenerator::initialize() {
   // General non-volatile parameters
   srcLid = par("srcLid");
-  flitSize_B = par("flitSize");
+  flitSize_B = par("flitSize"); 
   genDlyPerByte_ns = par("genDlyPerByte");
 
   // statistics
   timeLastSent = 0;
   totalBytesSent = 0;
   firstPktSendTime = 0;
-
+  
   // we start with pkt 0
   pktId = 0;
   msgIdx = 0;
@@ -64,8 +62,6 @@ void IBGenerator::initialize() {
   numContPkts = 0;
   maxContPkts = par("maxContPkts");
   maxQueuedPerVL = par("maxQueuedPerVL");
-  maxInlineData_B = par("maxInlineData");
-  std::cerr << "max inline data: " << maxInlineData_B << '\n';
 
   pushMsg = new cMessage("push1", IB_PUSH_MSG);
 
@@ -92,7 +88,7 @@ void IBGenerator::initPacketParams(IBAppMsg *p_msg, unsigned int pktIdx)
   if (p_msg->getPktIdx() >= p_msg->getLenPkts() - 1) {
     // last packet
     pktLen_B = p_msg->getLenBytes() % p_msg->getMtuBytes();
-    if (pktLen_B == 0)
+    if (pktLen_B == 0) 
       pktLen_B = p_msg->getMtuBytes();
   } else {
     pktLen_B = p_msg->getMtuBytes();
@@ -108,12 +104,16 @@ int IBGenerator::isRemoteHoQFree(int vl){
   // find the VLA connected to the given port and
   // call its method for checking and setting HoQ
   cGate *p_gate = gate("out")->getPathEndGate();
-  IBVLArb *p_vla = check_and_cast<IBVLArb *>(p_gate->getOwnerModule());
+  IBVLArb *p_vla = dynamic_cast<IBVLArb *>(p_gate->getOwnerModule());
+  if ((p_vla == NULL) || strcmp(p_vla->getName(), "vlarb")) {
+    error("cannot get VLA for generator out port");
+  }
+  
   int remotePortNum = p_gate->getIndex();
   return(p_vla->isHoQFree(remotePortNum, vl));
 }
 
-unsigned int IBGenerator::vlBySQ(unsigned sq)
+unsigned int IBGenerator::vlBySQ(unsigned sq) 
 {
   return(sq);
 }
@@ -122,18 +122,13 @@ unsigned int IBGenerator::vlBySQ(unsigned sq)
 // take current VLQ threshold and maxContPkts into account
 // updates curApp
 // return true if found new appMsg to work on
-bool IBGenerator::arbitrateApps()
+bool IBGenerator::arbitrateApps() 
 {
   // try to stay with current app if possible
   if (appMsgs[curApp]) {
     unsigned vl = vlBySQ(appMsgs[curApp]->getSQ());
-    if ((appMsgs[curApp]->getFlitIdx() != 0)) {
-      /* Non-first flit, we cannot switch apps!!! */
-      EV << "-I" << getFullPath() << " cannot arbitrate in the middle of packet\n";
-      return true;
-    }
-    if ((numContPkts < maxContPkts) &&
-        ((unsigned)VLQ[vl].getLength() < maxQueuedPerVL)) {
+    if ((numContPkts < maxContPkts) && 
+        ((unsigned)VLQ[vl].length() < maxQueuedPerVL)) {
       EV << "-I-" << getFullPath() << " arbitrate apps continue" << endl;
       return true;
     }
@@ -141,20 +136,16 @@ bool IBGenerator::arbitrateApps()
 
   unsigned int oldApp = curApp;
   bool found = false;
-  // search through all apps return to current
+  // search through all apps return to current 
   for (unsigned i = 1; !found && (i <= numApps); i++) {
     unsigned int a = (curApp + i) % numApps;
     EV << "-I-" << getFullPath() << " trying app: " << a << endl;
     if (appMsgs[a]) {
       unsigned vl = vlBySQ(appMsgs[a]->getSQ());
-      if ((unsigned)VLQ[vl].getLength() < maxQueuedPerVL) {
-        EV << "-I-" << getFullPath() << " arbitrate apps selected:"
-           << a << endl;
-        if (curApp != a && appMsgs[curApp]
-			&& appMsgs[curApp]->getFlitIdx() != 0) {
-		throw cRuntimeError("Arbitrate switched apps with packet in progress\n");
-	}
+      if ((unsigned)VLQ[vl].length() < maxQueuedPerVL) {
         curApp = a;
+        EV << "-I-" << getFullPath() << " arbitrate apps selected:" 
+           << a << endl;
         found = true;
       } else {
         EV << "-I-" << getFullPath() << " skipping app:" << a
@@ -177,7 +168,7 @@ bool IBGenerator::arbitrateApps()
 
 // Called when there is some active appMsg that can be
 // handled. Create the FLIT and place on VLQ, Maybe send (if VLA empty)
-// also may retire the appMsg and clean the appMsgs and send it back to
+// also may retire the appMsg and clean the appMsgs and send it back to 
 // its app
 void IBGenerator::getNextAppMsg()
 {
@@ -196,10 +187,11 @@ void IBGenerator::getNextAppMsg()
   // now make the new FLIT:
   IBDataMsg *p_cred;
   char name[128];
-  sprintf(name, "data-%u-%u-%u-%u", srcLid, msgIdx, thisPktIdx, thisFlitIdx);
+  sprintf(name, "data-%d-%d-%d-%d", srcLid, msgIdx, thisPktIdx, thisFlitIdx);
   p_cred = new IBDataMsg(name, IB_DATA_MSG);
   p_cred->setSrcLid(srcLid);
-  p_cred->setSendInline(p_msg->getLenBytes() < maxInlineData_B);
+  p_cred->setBitLength(flitSize_B*8);
+  p_cred->setByteLength(flitSize_B);
 
   p_cred->setDstLid(thisPktDst);
   p_cred->setSL(p_msg->getSQ());
@@ -212,34 +204,28 @@ void IBGenerator::getNextAppMsg()
   p_cred->setPktIdx(thisPktIdx);
   p_cred->setMsgLen(thisMsgLen);
   p_cred->setPacketLength(p_msg->getPktLenFlits());
+  p_cred->setPacketLengthBytes(p_msg->getPktLenBytes());
 
   p_cred->setBeforeAnySwitch(true);
 
   // provide serial number to packet head flits
   if (thisFlitIdx == 0) {
-    unsigned int dstPktSn = 0;
-    if (lastPktSnPerDst.find(thisPktDst) == lastPktSnPerDst.end()) {
-      dstPktSn = 1;
-      lastPktSnPerDst[thisPktDst] = dstPktSn;
-    } else {
-      dstPktSn = ++lastPktSnPerDst[thisPktDst];
-    }
-    p_cred->setPacketSn(dstPktSn);
+	  unsigned int dstPktSn = 0;
+	  if (lastPktSnPerDst.find(thisPktDst) == lastPktSnPerDst.end()) {
+		  dstPktSn = 1;
+		  lastPktSnPerDst[thisPktDst] = dstPktSn;
+	  } else {
+		  dstPktSn = ++lastPktSnPerDst[thisPktDst];
+	  }
+	  p_cred->setPacketSn(dstPktSn);
   } else {
-    p_cred->setPacketSn(0);
+	  p_cred->setPacketSn(0);
   }
 
-  if (thisFlitIdx + 1 == p_msg->getPktLenFlits()
-          && thisPktIdx + 1 == p_msg->getLenPkts()) {
-    p_cred->encapsulate(p_msg);
-  }
-
-  p_cred->setByteLength(flitSize_B);
-
-  // now we have a new FLIT at hand we can either Q it or send it over
-  // if there is a place for it in the VLA
+  // now we have a new FLIT at hand we can either Q it or send it over 
+  // if there is a place for it in the VLA 
   unsigned int vl = p_msg->getVL();
-  if (VLQ[vl].isEmpty() && isRemoteHoQFree(vl)) {
+  if (VLQ[vl].empty() && isRemoteHoQFree(vl)) {
     sendDataOut(p_cred);
   } else {
     VLQ[vl].insert(p_cred);
@@ -254,9 +240,9 @@ void IBGenerator::getNextAppMsg()
     // we completed a packet was it the last?
     if (++thisPktIdx == p_msg->getLenPkts()) {
       // we are done with the app msg
-      EV << "-I- " << getFullPath() << " completed appMsg:"
+      EV << "-I- " << getFullPath() << " completed appMsg:" 
          << p_msg->getName() << endl;
-      send(new cMessage(), "in$o", curApp);
+      send(p_msg, "in$o", curApp);
       appMsgs[curApp] = NULL;
     } else {
       p_msg->setPktIdx(thisPktIdx);
@@ -268,7 +254,7 @@ void IBGenerator::getNextAppMsg()
 }
 
 // arbitrate for next app, generate its FLIT and schedule next push
-void IBGenerator::genNextAppFLIT()
+void IBGenerator::genNextAppFLIT() 
 {
   // get the next application to work on
   if (!arbitrateApps()) {
@@ -289,7 +275,7 @@ void IBGenerator::genNextAppFLIT()
 
 // push is an internal event for generating a new FLIT
 void IBGenerator::handlePush(cMessage *p_msg){
-  // arbitrate next app,
+  // arbitrate next app, 
   genNextAppFLIT();
 }
 
@@ -308,17 +294,20 @@ void IBGenerator::handleApp(IBAppMsg *p_msg){
 
   // init the first packet parameters
   initPacketParams(p_msg, 0);
-
+  
   // store it
   appMsgs[a] = p_msg;
-
+  
   // if there is curApp msg or waiting on push pushMsg = do nothing
   if (((curApp != a) && (appMsgs[curApp] != NULL)) || ( pushMsg->isScheduled())) {
     EV << "-I-" << getFullPath() << " new app message:" << p_msg->getName()
-       << " queued since previous message:" << appMsgs[curApp]->getName()
+       << " queued since previous message:" << appMsgs[curApp]->getName() 
        << " being served" << endl;
     return;
   }
+
+  // force the new app to be arbitrated
+  curApp = a;
 
   genNextAppFLIT();
 }
@@ -326,37 +315,24 @@ void IBGenerator::handleApp(IBAppMsg *p_msg){
 // send out data and wait for it to clear
 void IBGenerator::sendDataOut(IBDataMsg *p_msg){
   unsigned int bytes = p_msg->getByteLength();
-  double delay_ns = 0;
-
-  if (!p_msg->getSendInline()) {
-      delay_ns = ((double)par("popDlyPerByte"))*bytes;
-
-    if (p_msg->getPktIdx() == 0) {
-        delay_ns += (double)par("flit2FlitGap");
-    } else {
-        int factor = p_msg->getPktIdx() + 1;
-        delay_ns += (double)par("flit2FlitGap") / factor;
-    }
-
-    sendDelayed(p_msg, delay_ns*1e-9, "out");
-  } else {
-    send(p_msg, "out");
-  }
+  double delay_ns = ((double)par("popDlyPerByte"))*bytes;
 
   // time stamp to enable tracking time in Fabric
   p_msg->setInjectionTime(simTime()+delay_ns*1e-9);
   p_msg->setTimestamp(simTime()+delay_ns*1e-9);
   totalBytesSent += bytes;
 
-  EV << "-I- " << getFullPath()
-     << " sending " << p_msg->getName()
-     << " packetLength(B):" << bytes
-     << " flitSn:" << p_msg->getFlitSn()
-     << " dstLid:" << p_msg->getDstLid()
-     << endl;
+  sendDelayed(p_msg, delay_ns*1e-9, "out");
 
+  EV << "-I- " << getFullPath() 
+     << " sending " << p_msg->getName() 
+     << " packetLength(B):" << bytes
+     << " flitSn:" << p_msg->getFlitSn() 
+     << " dstLid:" << p_msg->getDstLid() 
+     << endl;
+  
   // For oBW calculations
-  if (firstPktSendTime == 0)
+  if (firstPktSendTime == 0) 
     firstPktSendTime = simTime();
 }
 
@@ -364,9 +340,9 @@ void IBGenerator::sendDataOut(IBDataMsg *p_msg){
 void IBGenerator::handleSent(IBSentMsg *p_sent){
   int vl = p_sent->getVL();
   // We can not just send - need to see if the HoQ is free...
-  // NOTE : since we LOCK the HoQ when asking if HoQ is free we
+  // NOTE : since we LOCK the HoQ when asking if HoQ is free we 
   // must make sure we have something to send before we ask about it
-  if (!VLQ[vl].isEmpty()) {
+  if (!VLQ[vl].empty()) {
     if (isRemoteHoQFree(vl)) {
       IBDataMsg *p_msg = (IBDataMsg *)VLQ[vl].pop();
       EV << "-I- " << getFullPath() << " de-queue packet:"
@@ -402,7 +378,7 @@ void IBGenerator::handleMessage(cMessage *p_msg) {
 void IBGenerator::finish()
 {
   double oBW = totalBytesSent / (simTime() - firstPktSendTime);
-  EV << "STAT: " << getFullPath() << " Gen Output BW (B/s):" << oBW  << endl;
+  ev << "STAT: " << getFullPath() << " Gen Output BW (B/s):" << oBW  << endl; 
 }
 
 IBGenerator::~IBGenerator() {
