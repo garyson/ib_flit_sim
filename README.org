@@ -1,15 +1,31 @@
+* ib_flit_sim
 This directory tree hold an InfiniBand model with support for
 IB flow control scheme, Arbitration over multiple VLs and routing
 based on Linear Forwarding Tables.
 
-To run it, first make sure the OMNeT++ release bin directory is included in the LINUX search path
+To run it, first make sure the OMNeT++ (4.2.2) release bin directory is included in the LINUX search path:
+
+#+BEGIN_SRC sh
 export PATH=$PATH:/..../omnetpp-4.2.2/bin/
-Compile the model:
+#+END_SRC
+
+Then compile the model:
+
+#+BEGIN_SRC sh
 make makefiles; make; make MODE=release
+#+END_SRC
+
 Inspect the simulation setups available under the "examples" directory.
 For example run:
+
+#+BEGIN_SRC sh
 export NEDPATH=$d/src:$d/examples
 cd $d/examples/is1_3l_32n
 $d/out/gcc-release/src/ib_flit_sim -f is1_3l_32n.ini -c OneHot
+#+END_SRC
+
 Or without GUI:
+
+#+BEGIN_SRC sh
 $d/out/gcc-release/src/ib_flit_sim -f is1_3l_32n.ini -c OneHot –u Cmdenv
+#+END_SRC
