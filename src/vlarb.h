@@ -22,7 +22,7 @@
 // ============================
 // Ports
 // * in[N]
-// * out 
+// * out
 // * txCred - where flow control data is through
 // * sent[N] - backward notification of sent data
 //
@@ -31,10 +31,10 @@
 //                 from high level before low level checked.
 // * HighVLs[C], HighWeights[C], LowVLs[C], LowWeights[C] - the IB VLA config
 // * popDelayPerByte_s - control the rate of Pop events
-// 
+//
 // Internal Events
-// * Pop - cause a credit to leave the 
-// 
+// * Pop - cause a credit to leave the
+//
 // External Events
 // * Push - data is available on the INj (stored locally)
 // * txCred - FCCL = credits availability on remote port
@@ -42,19 +42,19 @@
 // Functionality
 // Every time a packet can be sent out as dictated by the Pop rate performs
 // IB style VLArb by inspecting available credits and packets.
-// Use round robin to select input port if data is availble on several.
+// Use round robin to select input port if data is available on several.
 // Track sent packets on each VL (FCTBS). The txCred event updates the FCCL[vl]
-// Free credits per VL are calculated as FCCL - FCTBS. 
+// Free credits per VL are calculated as FCCL - FCTBS.
 // When a credit is sent out of the VLArb a "Sent" event is provided back to
 // the IBUF (such that it can free buffers).
 //
 // Data Structure
-// To avoid duplicating and multiply by the number of ports the IBUF only 
-// keeps one credit message per input port, per VL. 
+// To avoid duplicating and multiply by the number of ports the IBUF only
+// keeps one credit message per input port, per VL.
 // The IBUF should push its available credit immediaty to the VLArb
 // The VLArb notify the IBUF that packet has left and the buffer is
-// not empty using the Sent message  
-// 
+// not empty using the Sent message
+//
 //
 #ifndef __VLARB_H
 #define __VLARB_H
@@ -64,7 +64,7 @@
 
 //
 // A single entry in the arbitration table
-// 
+//
 class ArbTableEntry {
 public:
   short int VL;
@@ -79,7 +79,7 @@ class IBVLArb: public cSimpleModule
 {
  private:
   cMessage *p_popMsg;
-  
+
   // parameters:
   int vlHighLimit;          // Max number of credits sent from High till Low
   ArbTableEntry HighTbl[8]; // The High Priority Arbitration Table
@@ -90,8 +90,8 @@ class IBVLArb: public cSimpleModule
   int VSWDelay;             // Delay brought by VLArb in Switch [ns] (SW par)
   bool useFCFSRQArb;        // Arbitrate RQs on same VL by First Come First Serve
 
-  // data strcture:
-  double popDelayPerByte_s;  // Rate of single byte injection 
+  // data structure:
+  double popDelayPerByte_s;  // Rate of single byte injection
   IBDataMsg ***inPktHoqPerVL; // the head of the send Q on every VL
   short **hoqFreeProvided;    // set when a "free" HoQ provided/cleared on push
   unsigned int HighIndex, LowIndex; // points to the index in the VLArb tables.
@@ -114,7 +114,7 @@ class IBVLArb: public cSimpleModule
 							int &nextPortNum);
   int firstComeFirstServeNextRQForVL(int numCredits, unsigned int curPortNum, short int vl,
   							   int &nextPortNum);
-  int  findNextSend( unsigned int &curIdx, ArbTableEntry *Tbl, 
+  int  findNextSend( unsigned int &curIdx, ArbTableEntry *Tbl,
 			   unsigned int &curPortNum, unsigned int &curVl );
   int  findNextSendOnVL0( unsigned int &curPortNum );
   void displayState();
@@ -127,19 +127,19 @@ class IBVLArb: public cSimpleModule
   // statistics
   cOutVector vl0Credits;  // the credits on VL0
   cOutVector vl1Credits;  // the credits on VL1
-  cOutVector readyData;   // the VLs with ready data in binaru code 
+  cOutVector readyData;   // the VLs with ready data in binaru code
   cOutVector arbDecision; // the resulting VL arbitrated -1 is invalid
-  cLongHistogram portXmitWaitHist; 
+  cLongHistogram portXmitWaitHist;
 
  public:
   // return 1 if the HoQ for that port/VL is free
-  int isHoQFree(unsigned int pn, unsigned int vl); 
+  int isHoQFree(unsigned int pn, unsigned int vl);
 
   // number of data packet credits sent total in this VL
   std::vector<long> FCTBS;
-  
-  // The last number of credits the receive port provided 
-  std::vector<long> FCCL; 
+
+  // The last number of credits the receive port provided
+  std::vector<long> FCCL;
 
  protected:
   virtual void initialize();
@@ -149,4 +149,3 @@ class IBVLArb: public cSimpleModule
 };
 
 #endif
-
