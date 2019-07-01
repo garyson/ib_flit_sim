@@ -75,8 +75,8 @@ void IBOutBuf::initialize()
   if (Enabled) {
     // we do want to have a continous flow of MinTime
     p_minTimeMsg = new cMessage("minTime", IB_MINTIME_MSG);
-    
-    // Send the first mintime immediately so that all is initialised 
+
+    // Send the first mintime immediately so that all is initialised
     // when we get first packets
     scheduleAt(simTime() , p_minTimeMsg);
   } else {
@@ -111,20 +111,20 @@ void IBOutBuf::sendOrQueuePortLoadUpdateMsg(unsigned int rank, unsigned int firs
 // Note that at this stage the Q might be empty but a
 // data packet will be streamed out
 void IBOutBuf::sendOutMessage(IBWireMsg *p_msg) {
-  
-  EV << "-I- " << getFullPath() << " sending msg:" << p_msg->getName() 
+
+  EV << "-I- " << getFullPath() << " sending msg:" << p_msg->getName()
      << " at time " << simTime() <<endl;
 
   // track out going packets
   if ( p_msg->getKind() == IB_DATA_MSG ) {
     IBDataMsg *p_dataMsg = (IBDataMsg *)p_msg;
-    
+
     // track if we are in the middle of packet
     if (!p_dataMsg->getFlitSn() && (p_dataMsg->getPacketLength() > 1))
       insidePacket = 1;
     else if (p_dataMsg->getFlitSn() + 1 == p_dataMsg->getPacketLength())
       insidePacket = 0;
-    
+
     FCTBS[p_msg->getVL()]++;
 
     flitsSources.collect(p_dataMsg->getSrcLid());
@@ -148,13 +148,13 @@ void
 IBOutBuf::qMessage(IBDataMsg *p_msg) {
   // we stamp it to know how much time it stayed with us
   //p_msg->setTimestamp(simTime());
-  
+
   if ( p_popMsg->isScheduled() ) {
     if ( qSize <= queue.length() ) {
-      opp_error("-E- %s  need to insert into a full Q. qSize:%d qLength:%d", 
+      opp_error("-E- %s  need to insert into a full Q. qSize:%d qLength:%d",
                 getFullPath().c_str(), qSize, queue.length());
     }
-    
+
     EV << "-I- " << getFullPath() << " queued data msg:" << p_msg->getName()
        << " Qdepth " << queue.length() << endl;
 
@@ -176,12 +176,12 @@ IBOutBuf::qMessage(IBDataMsg *p_msg) {
 // return 1 if sent or 0 if not
 // this function should be called by the pop event to check if flow control
 // is required to be sent
-// The minTime event only zeros out the curFlowCtrVL such that the operation 
+// The minTime event only zeros out the curFlowCtrVL such that the operation
 // restarts.
 // New Hermon mode provides extra cases where a flow control might be sent:
-// 1. If there are no other messages in the Q 
+// 1. If there are no other messages in the Q
 //
-// Also if there are messages in the Q we might not send FC unless the 
+// Also if there are messages in the Q we might not send FC unless the
 // difference is large enough
 int IBOutBuf::sendFlowControl()
 {
@@ -198,14 +198,14 @@ int IBOutBuf::sendFlowControl()
 
   for (; (sentUpdate == 0) && (curFlowCtrVL < maxVL+1); curFlowCtrVL++ ) {
     int i = curFlowCtrVL;
-    
+
     if (i == 0) {
       // avoid the first send...
       if (prevFCTime != 0)
         // flowControlDelay.collect(simTime() - prevFCTime);
         prevFCTime = simTime();
     }
-    
+
     // We may have ignored prevSentFCTBS[i] == FCTBS[i] since the other side
     // tracks ABR but the spec asks us to send anyways
     if ( (prevSentFCTBS[i] != FCTBS[i]) || (prevSentFCCL[i] != FCCL[i]) ) {
@@ -213,17 +213,17 @@ int IBOutBuf::sendFlowControl()
       char name[128];
       sprintf(name, "fc-%d-%ld", i, flowCtrlId++);
       IBFlowControl *p_msg = new IBFlowControl(name, IB_FLOWCTRL_MSG);
-      
+
       p_msg->setBitLength(8*8);
       p_msg->setVL(i);
       p_msg->setFCCL(FCCL[i]);
       p_msg->setFCTBS(FCTBS[i]);
       prevSentFCCL[i] = FCCL[i];
       prevSentFCTBS[i] = FCTBS[i];
-      EV << "-I- " << getFullPath() << " generated:" << p_msg->getName() 
-         << " vl: " << p_msg->getVL() << " FCTBS: " 
+      EV << "-I- " << getFullPath() << " generated:" << p_msg->getName()
+         << " vl: " << p_msg->getVL() << " FCTBS: "
          << p_msg->getFCTBS() << " FCCL: " << p_msg->getFCCL() << endl;
-      
+
       // we do not need to Q as we are only called in pop
       sendOutMessage(p_msg);
       sentUpdate = 1;
@@ -284,10 +284,10 @@ void IBOutBuf::handlePop()
     IBWireMsg *p_msg = (IBWireMsg *)queue.pop();
     if ( p_msg->getKind() == IB_DATA_MSG ) {
       IBDataMsg *p_cred = (IBDataMsg *)p_msg;
-      EV << "-I- " << getFullPath() << " popped data message:" 
+      EV << "-I- " << getFullPath() << " popped data message:"
          << p_cred->getName() << endl;
       sendOutMessage(p_msg);
-      
+
       // track the time this PACKET (all credits) spent in the Q
       // the last credit of a packet always
       if ( p_cred->getFlitSn() + 1 == p_cred->getPacketLength() ) {
@@ -296,7 +296,7 @@ void IBOutBuf::handlePop()
         packetHeadTimeStamp = p_msg->getTimestamp();
       }
 
-      // we just popped a real credit 
+      // we just popped a real credit
       prevPopWasDataCredit = 1;
     } else {
       EV << "-E- " << getFullPath() << " unknown message type to pop:"
@@ -323,13 +323,13 @@ void IBOutBuf::handleMinTime()
   if (! p_popMsg->isScheduled() ) {
     scheduleAt(simTime() + 1e-9, p_popMsg);
   }
-  
+
   // we use the min time to collect Queue depth stats:
   qDepthHist.collect( queue.length() );
 
   scheduleAt(simTime() + credMinTime_us*1e-6, p_minTimeMsg);
 } // handleMinTime
-  
+
 // Handle rxCred
 void IBOutBuf::handleRxCred(IBRxCredMsg *p_msg)
 {
@@ -358,12 +358,12 @@ void IBOutBuf::handleMessage(cMessage *p_msg)
 
 void IBOutBuf::finish()
 {
-  /* EV << "STAT: " << getFullPath() << " Data Packet Q time num/avg/max/std:"
+   EV << "STAT: " << getFullPath() << " Data Packet Q time num/avg/max/std:"
      << packetStoreHist.getCount() << " / "
      << packetStoreHist.getMean() << " / "
      << packetStoreHist.getMax() << " / "
-     << packetStoreHist.getStddev() << endl; 
-     EV << "STAT: " << getFullPath() << " Q depth num/avg/max/std:"        
+     << packetStoreHist.getStddev() << endl;
+     EV << "STAT: " << getFullPath() << " Q depth num/avg/max/std:"
      << qDepthHist.getCount() << " / "
      << qDepthHist.getMean() << " / "
      << qDepthHist.getMax() << " / "
@@ -373,11 +373,11 @@ void IBOutBuf::finish()
      << flowControlDelay.getMean() << " / "
      << flowControlDelay.getMax() << " / "
      << flowControlDelay.getStddev() << endl;
-  */
+
 	double oBW = totalBytesSent / (simTime() - firstPktSendTime);
 	recordScalar("Output BW (Byte/Sec)", oBW);
 	flitsSources.record();
-	// EV << "STAT: " << getFullPath() << " Flit Sources:" << endl << flitsSources.detailedInfo() << endl;
+	EV << "STAT: " << getFullPath() << " Flit Sources:" << endl << flitsSources.detailedInfo() << endl;
 }
 
 IBOutBuf::~IBOutBuf() {
