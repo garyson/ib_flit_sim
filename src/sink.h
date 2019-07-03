@@ -87,14 +87,14 @@ class IBSink : public cSimpleModule
   std::map<MsgTupple, class OutstandingMsgData, MsgTuppleLess> outstandingMsgsData;
 
   // methods
-  void newDrainMessage(double delay);  
+  void newDrainMessage(double delay);
   void consumeDataMsg(IBDataMsg *p_msg);
   void handlePop(cMessage *p_msg);
   void handleData(IBDataMsg *p_msg);
   void handleHiccup(cMessage *p_msg);
 
   // statistics
-  cDoubleHistogram PakcetFabricTime; 
+  cDoubleHistogram PakcetFabricTime;
   cStdDev waitStats;          // Data Packets Wait Time statistics
   cStdDev hiccupStats;        // statistics about hiccups
   std::vector<int> VlFlits;   // total number of FLITs per VL
@@ -105,6 +105,8 @@ class IBSink : public cSimpleModule
   unsigned int totOOPackets;  // the total number of packets that need retransmission inc the window
   unsigned int totIOPackets;  // the total packets received in order
   cDoubleHistogram msgLatency; // the network latency of received messages from the
+                               // time first msg flit was injected to the time last msg flit received
+  cDoubleHistogram smallMsgLatency; // the network latency of received small messages from the
                                // time first msg flit was injected to the time last msg flit received
   cDoubleHistogram msgF2FLatency; // the network latency of received messages from the
                                // time first msg flit was injected to the time last packet first flit received

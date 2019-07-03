@@ -48,6 +48,8 @@ module SwitchPort
             parameters:
                 isHcaArbiter = 0;
                 numPorts = numSwitchPorts;
+		useFCFSRQArb = true;
+		maxVL = 8;
                 @display("p=191,156;i=block/dispatch");
             gates:
                 in[numSwitchPorts];
@@ -88,7 +90,7 @@ module Switch
 
     submodules:
         pktfwd : < pktFwdType > like ib_model.PktFwd_Ifc {
-            parameters: 
+            parameters:
                 numPorts = numSwitchPorts;
         }
         port[numSwitchPorts]: SwitchPort {

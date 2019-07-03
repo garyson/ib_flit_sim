@@ -363,21 +363,21 @@ void IBOutBuf::finish()
      << packetStoreHist.getMean() << " / "
      << packetStoreHist.getMax() << " / "
      << packetStoreHist.getStddev() << endl;
-     EV << "STAT: " << getFullPath() << " Q depth num/avg/max/std:"
-     << qDepthHist.getCount() << " / "
-     << qDepthHist.getMean() << " / "
-     << qDepthHist.getMax() << " / "
-     << qDepthHist.getStddev() << endl;
-     EV << "STAT: " << getFullPath() << " FlowControl Delay num/avg/max/std:"
-     << flowControlDelay.getCount() << " / "
-     << flowControlDelay.getMean() << " / "
-     << flowControlDelay.getMax() << " / "
-     << flowControlDelay.getStddev() << endl;
+     // EV << "STAT: " << getFullPath() << " Q depth num/avg/max/std:"
+     // << qDepthHist.getCount() << " / "
+     // << qDepthHist.getMean() << " / "
+     // << qDepthHist.getMax() << " / "
+     // << qDepthHist.getStddev() << endl;
+     // EV << "STAT: " << getFullPath() << " FlowControl Delay num/avg/max/std:"
+     // << flowControlDelay.getCount() << " / "
+     // << flowControlDelay.getMean() << " / "
+     // << flowControlDelay.getMax() << " / "
+     // << flowControlDelay.getStddev() << endl;
 
 	double oBW = totalBytesSent / (simTime() - firstPktSendTime);
 	recordScalar("Output BW (Byte/Sec)", oBW);
 	flitsSources.record();
-	EV << "STAT: " << getFullPath() << " Flit Sources:" << endl << flitsSources.detailedInfo() << endl;
+	// EV << "STAT: " << getFullPath() << " Flit Sources:" << endl << flitsSources.detailedInfo() << endl;
 }
 
 IBOutBuf::~IBOutBuf() {

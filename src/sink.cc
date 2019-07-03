@@ -18,13 +18,13 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 //
-// The IBSink implements an IB endport FIFO that is filled by the push 
+// The IBSink implements an IB endport FIFO that is filled by the push
 // message and drained by the pop self-message.
 // To simulate hiccups in PCI Exp bus, we schedule self-messages of type hiccup
 // hiccup message alternate between an ON and OFF state. During ON state any
 // drain message is ignored. On transition to OFF a new drain message can
 // be generated
-// 
+//
 #include "ib_m.h"
 #include "sink.h"
 
@@ -44,25 +44,25 @@ void IBSink::initialize()
   flitSize = par("flitSize");
   popDlyPerByte_ns = par("popDlyPerByte"); // PCIe drain rate
   WATCH(popDlyPerByte_ns);
- 
+
   repFirstPackets = par("repFirstPackets");
 
   // we will allocate a drain message only on the first flit getting in
   // which is consumed immediately...
   p_drainMsg = new cMessage("pop", IB_POP_MSG);
   AccBytesRcv = 0;
-  
+
   duringHiccup = 0;
   WATCH(duringHiccup);
-  
+
   p_hiccupMsg = new cMessage("pop");
   p_hiccupMsg->setKind(IB_HICCUP_MSG);
   scheduleAt(simTime()+1e-9, p_hiccupMsg);
-  
+
   // we track number of packets per VL:
-  for (int vl = 0; vl < maxVL+1; vl++) 
+  for (int vl = 0; vl < maxVL+1; vl++)
     VlFlits.push_back(0);
-  
+
   WATCH_VECTOR(VlFlits);
 
   totOOOPackets = 0;
@@ -71,6 +71,7 @@ void IBSink::initialize()
   oooPackets.setName("OOO-Packets");
   oooWindow.setName("OOO-Window-Pkts");
   msgLatency.setName("Msg-Network-Latency");
+  smallMsgLatency.setName("Small-Msg-Network-Latency");
   msgF2FLatency.setName("Msg-First2First-Network-Latency");
   enoughPktsLatency.setName("Enough-Pkts-Network-Latency");
   enoughToLastPktLatencyStat.setName("Last-to-Enough-Pkt-Arrival");
@@ -79,7 +80,7 @@ void IBSink::initialize()
 // Init a new drain message and schedule it after delay
 void IBSink::newDrainMessage(double delay_us) {
   // we track the start time so we can hiccup left over...
-  p_drainMsg->setTimestamp(simTime()); 
+  p_drainMsg->setTimestamp(simTime());
   scheduleAt(simTime()+delay_us*1e-6, p_drainMsg);
 }
 
@@ -87,7 +88,7 @@ void IBSink::newDrainMessage(double delay_us) {
 void IBSink::consumeDataMsg(IBDataMsg *p_msg)
 {
 
-  EV << "-I- " << getFullPath() << " consumed data:" 
+  EV << "-I- " << getFullPath() << " consumed data:"
      << p_msg->getName() << endl;
 
   // track the absolute time this packet was consumed
@@ -97,7 +98,7 @@ void IBSink::consumeDataMsg(IBDataMsg *p_msg)
   if (simTime() > startStatCol_sec) {
 	 simtime_t d = lastConsumedPakcet - p_msg->getTimestamp();
 	 waitStats.collect( d );
-	 
+
 	 // track the time this flit spent on the wire...
 	 if (p_msg->getFlitSn() == (p_msg->getPacketLength() -1)) {
 		d = simTime() - p_msg->getTimestamp();
@@ -207,6 +208,9 @@ void IBSink::handleData(IBDataMsg *p_msg)
 		  if (repFirstPackets) {
 			  enoughToLastPktLatencyStat.collect(simTime() - (*mI).second.enoughPktsLastFlitTime);
 		  }
+		  if(p_msg->getSrcLid() == 7){
+		    smallMsgLatency.collect(simTime() - (*mI).second.firstFlitTime);
+		  }
 		  msgLatency.collect(simTime() - (*mI).second.firstFlitTime);
 		  EV << "-I- " << getFullPath() << " received last flit of message from src: "
 				 <<  p_msg->getSrcLid() << " app:" << p_msg->getAppIdx() << " msg: " << p_msg->getMsgIdx() << endl;
@@ -221,7 +225,7 @@ void IBSink::handleData(IBDataMsg *p_msg)
 
   // we might be arriving on empty buffer:
   if ( ! p_drainMsg->isScheduled() ) {
-    EV << "-I- " << getFullPath() << " data:" << p_msg->getName() 
+    EV << "-I- " << getFullPath() << " data:" << p_msg->getName()
        << " arrived on empty FIFO" << endl;
     // this credit should take this time consume:
     delay_us = p_msg->getByteLength() * popDlyPerByte_ns*1e-3;
@@ -240,15 +244,15 @@ void IBSink::handlePop(cMessage *p_msg)
   // got to pop from the queue if anything there
   if ( !queue.empty() && ! duringHiccup ) {
     IBDataMsg *p_dataMsg = (IBDataMsg *)queue.pop();
-    EV << "-I- " << getFullPath() << " De-queued data:" 
+    EV << "-I- " << getFullPath() << " De-queued data:"
        << p_dataMsg->getName() << endl;
 
     // when is our next pop event?
     double delay_ns = p_dataMsg->getByteLength() * popDlyPerByte_ns;
-    
+
     // consume actually discards the message !!!
     consumeDataMsg(p_dataMsg);
-    
+
     scheduleAt(simTime()+delay_ns*1e-9, p_drainMsg);
   } else {
     // The queue is empty. Next message needs to immediatly pop
@@ -267,7 +271,7 @@ void IBSink::handleHiccup(cMessage *p_msg)
     // we are inside a hiccup - turn it off and schedule next ON
     duringHiccup = 0;
     delay_us = par("hiccupDelay");
-    EV << "-I- " << getFullPath() << " Hiccup OFF for:" 
+    EV << "-I- " << getFullPath() << " Hiccup OFF for:"
        << delay_us << "usec" << endl;
 
     // as we are out of hiccup make sure we have at least one outstanding drain
@@ -277,8 +281,8 @@ void IBSink::handleHiccup(cMessage *p_msg)
     // we need to start a new hiccup
     duringHiccup = 1;
     delay_us = par("hiccupDuration");
-    
-    EV << "-I- " << getFullPath() << " Hiccup ON for:" << delay_us 
+
+    EV << "-I- " << getFullPath() << " Hiccup ON for:" << delay_us
        << "usec" << endl ;
   }
 
@@ -304,10 +308,10 @@ void IBSink::handleMessage(cMessage *p_msg)
     delete p_msg;
   } else {
     opp_error("-E- %s does not know what to with msg: %d is local: %d"
-              " senderModule: %s", 
-              getFullPath().c_str(), 
-              p_msg->getKind(), 
-              p_msg->isSelfMessage(), 
+              " senderModule: %s",
+              getFullPath().c_str(),
+              p_msg->getKind(),
+              p_msg->isSelfMessage(),
               p_msg->getSenderModule());
     delete p_msg;
   }
@@ -320,6 +324,7 @@ void IBSink::finish()
   waitStats.record();
   PakcetFabricTime.record();
   msgLatency.record();
+  smallMsgLatency.record();
   msgF2FLatency.record();
   enoughPktsLatency.record();
   enoughToLastPktLatencyStat.record();
