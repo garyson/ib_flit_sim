@@ -18,8 +18,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////
 //
-// An Application - Message Generator 
-// 
+// An Application - Message Generator
+//
 // Overview:
 // =========
 // The task of the IB message generator is to mimic an application
@@ -29,7 +29,7 @@
 // Message generation can be configured with the following set of orthogonal
 // mechanisms:
 // * Destination selection - how a message destinaton is defined
-// * Message length - what length the message will be in (can be down 
+// * Message length - what length the message will be in (can be down
 //   to packet length if we are in single packet message
 // * Injection rate and burstiness - we incorporate inter/intra message jitter
 // * SQ - what SQ the application messages belongs to
@@ -59,33 +59,33 @@
 //           DST_SEQ_RAND - choose from the sequence in random order
 //
 // Parameters for destination selection:
-// dstMode - possible values: param|seq_once|seq_loop|seq_rand 
+// dstMode - possible values: param|seq_once|seq_loop|seq_rand
 // dstLid - the destination LID - used in DST_PARAM
 // dstSeqVecFile - the vector file name that contain the sequences
 // dstSeqVecIdx - the index of the generator in the file
-// 
+//
 // Message/Packet Size Selection:
 // ==============================
 // MSG_LEN_PARAM - message length is based on msgSize param
 // MSG_LEN_SET - selects from a set of sizes with their relative probability
-// 
+//
 // Parameters for message size:
 // msgLenMode - possible values: param|set
 // msgLength_B - the length of a message in bytes - last packet may be padded
-// msgLenSet - a set of lengths 
+// msgLenSet - a set of lengths
 // msgLenProb - probability for each length
 // mtuLen_B - the MTU of single packet. It is the same for entire message.
 //
 // NOTE: due to current limitation of the simulator of sending full flits
 // all sizes are padded to flitSize ...
-// 
+//
 // Traffic Shaping:
 // ================
 // There are no special modes here.
-// 
+//
 // Parameters that control shaping:
 // msg2msgGap_ns - the extra delay from one msg end to the next start [ns]
-// 
+//
 // SQ selection:
 // ================
 // Currently there is nothing special here. SQ assigned by param
@@ -108,7 +108,7 @@ class IBApp : public cSimpleModule
 {
  private:
   // destination selection modes
-  enum dstSelModes { 
+  enum dstSelModes {
     DST_PARAM,     // invoke the dstLid param every message
     DST_SEQ_ONCE,  // use the dstSeq vector of dstLids only once.
     DST_SEQ_LOOP,  // continously loop through the dstSeq vector od dstLids.
@@ -121,20 +121,21 @@ class IBApp : public cSimpleModule
     MSG_LEN_SET    // select from the given set of lengths/probabilities
   };
 
-  // - destination 
+  // - destination
+  int disable; // is this app active or not
   dstSelModes msgDstMode;    // mode for selecting destination
   std::string dstSeqVecFile; // the vector file name that contain the sequences
   unsigned int dstSeqVecIdx; // the index of the generator in the file
   std::vector<int> *dstSeq; // a destination lid sequence
-  
-  // - length 
+
+  // - length
   msgLenModes msgLenMode;          // possible values: param|set
   std::vector<int> msgLenSet; // a set of lengths
   cLongHistogram msgLenProb;// probability for each index in msgLenSet
 
   // - shape
   double msg2msgGap_ns;   // extra delay from one msg end to the next start
-   
+
   // - SQ
 
   // state

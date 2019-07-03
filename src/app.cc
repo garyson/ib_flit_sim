@@ -19,8 +19,8 @@
 ///////////////////////////////////////////////////////////////////////////
 //
 // IB App Message Generator:
-// 
-// Internal Messages: 
+//
+// Internal Messages:
 // None
 //
 // External Messages:
@@ -65,7 +65,7 @@ void IBApp::initialize(){
   if (!strcmp(dstModePar, "param")) {
     msgDstMode = DST_PARAM;
   } else if (!strcmp(dstModePar, "seq_once")) {
-    msgDstMode = DST_SEQ_ONCE;  
+    msgDstMode = DST_SEQ_ONCE;
   } else if (!strcmp(dstModePar, "seq_loop")) {
     msgDstMode = DST_SEQ_LOOP;
   } else if (!strcmp(dstModePar, "seq_rand")) {
@@ -81,12 +81,14 @@ void IBApp::initialize(){
     vecFiles   *vecMgr = vecFiles::get();
     dstSeq = vecMgr->getIntVec(dstSeqVecFile, dstSeqVecIdx);
     if (dstSeq == NULL) {
-            opp_error("fail to obtain dstSeq vector: %s/%d", 
+            opp_error("fail to obtain dstSeq vector: %s/%d",
                                dstSeqVecFile, dstSeqVecIdx);
     }
     EV << "-I- Defined DST sequence of " << dstSeq->size() << " LIDs" << endl;
   }
-  
+
+  disable = par("disable");
+
   // Message Length Modes
   const char *msgLenModePar = par("msgLenMode");
   if (!strcmp(msgLenModePar,"param")) {
@@ -96,24 +98,24 @@ void IBApp::initialize(){
   } else {
     opp_error("unknown msgLenMode: %s", msgLenMode);
   }
-  
+
   // need to init the set...
   if (msgLenMode == MSG_LEN_SET) {
     parseIntListParam("msgLenSet", msgLenSet);
     vector<int> msgLenProbVec;
     parseIntListParam("msgLenProb", msgLenProbVec);
-    
+
     if (msgLenSet.size() != msgLenProbVec.size()) {
       error("provided msgLenSet size: %d != msgLenProb size: %d",
             msgLenSet.size(), msgLenProbVec.size());
     }
 
-    // convert the given probabilities into a histogram 
+    // convert the given probabilities into a histogram
     // with Prob[idx] where idx is the index of the length in the vector
     msgLenProb.setNumCells(msgLenSet.size());
     msgLenProb.setRange(0,msgLenSet.size()-1);
     // HACK: there must be a faster way to do this!
-    for (unsigned int i = 0; i < msgLenProbVec.size(); i++) 
+    for (unsigned int i = 0; i < msgLenProbVec.size(); i++)
       for (int p = 0; p < msgLenProbVec[i]; p++)
         msgLenProb.collect(i);
 
@@ -121,7 +123,7 @@ void IBApp::initialize(){
   }
 
   seqIdxVec.setName("Dst-Sequence-Index");
-  
+
   // if we are in param mode we may be getting a 0 as DST and thus keep quite
   if (msgDstMode == DST_PARAM) {
 	  int dstLid = par("dstLid");
@@ -141,14 +143,14 @@ unsigned int IBApp::getMsgLenByDistribution()
  return int(r);
 }
 
-// Initialize the parameters for a new message by sampling the 
+// Initialize the parameters for a new message by sampling the
 // relevant parameters and  allocate and init a new message
 IBAppMsg *IBApp::getNewMsg()
 {
 
   unsigned int msgMtuLen_B; // MTU of packet. same for entire message.
   unsigned int msgLen_P;    // the message length in packets
-  unsigned int msgLen_B;    // the length of a message in bytes 
+  unsigned int msgLen_B;    // the length of a message in bytes
   unsigned int msgSQ;       // the SQ to be used
   unsigned int msgDstLid;   // destination lid
 
@@ -167,7 +169,7 @@ IBAppMsg *IBApp::getNewMsg()
     error("unsupported msgLenMode: %d", msgLenMode);
     break;
   }
-  
+
   msgLen_P = msgLen_B / msgMtuLen_B;
 
   // obtain the message destination
@@ -216,6 +218,7 @@ IBAppMsg *IBApp::getNewMsg()
 void IBApp::handleMessage(cMessage *p_msg){
   delete p_msg;
 
+  if(disable) return;
   if (!dstSeqDone) {
     // generate a new messaeg and send after hiccup
     IBAppMsg *p_new = getNewMsg();
@@ -223,8 +226,8 @@ void IBApp::handleMessage(cMessage *p_msg){
     double delay_ns = par("msg2msgGap");
     sendDelayed(p_new, delay_ns*1e-9, "out$o");
 
-    EV << "-I- " << getFullPath() 
-       << " sending new app message " << p_new->getName() 
+    EV << "-I- " << getFullPath()
+       << " sending new app message " << p_new->getName()
        << endl;
   }
 }
