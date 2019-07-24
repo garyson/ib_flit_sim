@@ -21,11 +21,11 @@ For example run:
 #+BEGIN_SRC sh
 export NEDPATH=$d/src:$d/examples
 cd $d/examples/is1_3l_32n
-$d/out/gcc-release/src/ib_flit_sim -f is1_3l_32n.ini -c OneHot
+$d/out/gcc-release/src/ib_flit_sim -f is1_3l_32n.ini -c OneHot -u Cmdenv
 #+END_SRC
 
-Or without GUI:
+Or for converged traffic:
 
 #+BEGIN_SRC sh
-$d/out/gcc-release/src/ib_flit_sim -f is1_3l_32n.ini -c OneHot –u Cmdenv
+$d/out/gcc-release/src/ib_flit_sim -f is1_1l_8n.ini -c OneHot –u Cmdenv
 #+END_SRC
